@@ -328,6 +328,40 @@
   .btn-qf:hover { border-color:var(--bordeaux); color:var(--bordeaux); }
   .btn-qf.active { background:var(--bordeaux); color:var(--blanc); border-color:var(--bordeaux); }
 
+  /* Vue jour unique */
+  .day-view-header {
+    font-family:'Playfair Display',serif; font-size:1.2rem; color:var(--bordeaux);
+    margin-bottom:16px; display:flex; align-items:center; justify-content:space-between;
+    flex-wrap:wrap; gap:8px;
+  }
+  .day-view-count { font-family:'Lato',sans-serif; font-size:0.78rem; color:var(--gris); font-weight:400; }
+
+  /* Vue mois */
+  .month-grid {
+    display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-top:8px;
+  }
+  .month-hdr {
+    text-align:center; font-size:0.68rem; font-weight:700; letter-spacing:0.1em;
+    text-transform:uppercase; color:var(--gris); padding:6px 2px;
+  }
+  .month-cell {
+    border-radius:8px; padding:7px 5px; text-align:center; min-height:56px;
+    border:1.5px solid var(--gris-clair); background:var(--blanc);
+    cursor:default; transition:all 0.15s; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:3px;
+  }
+  .month-cell.has-resa { border-color:var(--bordeaux); cursor:pointer; background:rgba(107,26,42,0.04); }
+  .month-cell.has-resa:hover { background:rgba(107,26,42,0.1); transform:translateY(-1px); }
+  .month-cell.is-today { background:var(--bordeaux); border-color:var(--bordeaux); }
+  .month-cell.is-today .mc-num { color:var(--blanc); }
+  .month-cell.empty-cell { background:transparent; border-color:transparent; }
+  .mc-num { font-size:0.88rem; font-weight:700; color:var(--gris); }
+  .month-cell.has-resa .mc-num { color:var(--bordeaux); }
+  .mc-badge { font-size:0.58rem; font-weight:700; color:var(--bordeaux); background:rgba(107,26,42,0.1); border-radius:99px; padding:1px 5px; white-space:nowrap; }
+  .month-cell.is-today .mc-badge { background:rgba(255,255,255,0.25); color:var(--blanc); }
+  .month-label { font-family:'Playfair Display',serif; font-size:1.3rem; color:var(--bordeaux); margin-bottom:4px; }
+  .month-nav { display:flex; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+  .month-total { font-size:0.75rem; color:var(--gris); }
+
   /* ── CALENDRIER ── */
   .calendar-grid {
     display:grid; grid-template-columns:repeat(7,1fr); gap:6px;
@@ -627,14 +661,13 @@
 
     <!-- Filtres rapides -->
     <div class="quick-filters">
-      <button class="btn-qf" id="qf-today"    onclick="quickFilter('today')">📅 Aujourd'hui</button>
-      <button class="btn-qf" id="qf-week"     onclick="quickFilter('week')">🗓 Cette semaine</button>
-      <button class="btn-qf" id="qf-month"    onclick="quickFilter('month')">📆 Ce mois-ci</button>
-      <button class="btn-qf" id="qf-all"      onclick="quickFilter('all')">Tout voir</button>
+      <button class="btn-qf active" id="qf-today" onclick="quickFilter('today')">📅 Aujourd'hui</button>
+      <button class="btn-qf" id="qf-week"  onclick="quickFilter('week')">🗓 Cette semaine</button>
+      <button class="btn-qf" id="qf-month" onclick="quickFilter('month')">📆 Ce mois-ci</button>
     </div>
 
-    <!-- Navigation semaine -->
-    <div class="week-nav">
+    <!-- Navigation semaine (vue semaine) -->
+    <div class="week-nav" id="week-nav-bar">
       <button class="btn-week" onclick="changeWeek(-1)">‹</button>
       <div class="week-nav-title">
         <span id="week-label-top">Semaine</span>
@@ -644,9 +677,18 @@
       <button class="btn-week" onclick="changeWeek(1)">›</button>
     </div>
 
-    <!-- Grille 7 jours -->
-    <div class="calendar-grid" id="cal-headers"></div>
-    <div class="calendar-grid" id="cal-days" style="margin-top:4px;"></div>
+    <!-- Navigation mois (vue mois) -->
+    <div id="month-nav-bar" style="display:none;">
+      <div class="month-nav">
+        <button class="btn-week" onclick="changeMonth(-1)">‹</button>
+        <div class="month-label" id="month-label">—</div>
+        <button class="btn-week" onclick="changeMonth(1)">›</button>
+        <span class="month-total" id="month-total"></span>
+      </div>
+    </div>
+
+    <!-- Contenu agenda -->
+    <div id="agenda-view"></div>
 
   </div>
 </div>
@@ -1093,223 +1135,189 @@ function getWeekStart(date) {
   return d;
 }
 
-function changeWeek(dir) {
-  currentWeekStart = new Date(currentWeekStart);
-  currentWeekStart.setDate(currentWeekStart.getDate() + dir*7);
-  // Désactive les filtres rapides quand on navigue manuellement
-  document.querySelectorAll('.btn-qf').forEach(b => b.classList.remove('active'));
-  renderAgenda();
-}
+// ── SYSTÈME DE VUES ───────────────────────────────────────
+let viewMode = 'today';
+let currentMonthDate = new Date();
 
-function goToday() {
-  quickFilter('today');
-}
-
-// ── FILTRES RAPIDES ───────────────────────────────────────
 function quickFilter(type) {
-  const today = new Date();
-  today.setHours(0,0,0,0);
-
-  // Highlight bouton actif
+  viewMode = type;
   document.querySelectorAll('.btn-qf').forEach(b => b.classList.remove('active'));
   const btn = $('qf-'+type);
   if (btn) btn.classList.add('active');
-
-  if (type === 'today') {
-    // Aller à la semaine contenant aujourd'hui
-    currentWeekStart = getWeekStart(today);
-    renderAgenda();
-    // Flash le jour d'aujourd'hui
-    setTimeout(() => {
-      const todayStr = toDateStr(today);
-      const cols = document.querySelectorAll('.cal-day');
-      cols.forEach(col => {
-        if (col.classList.contains('today')) {
-          col.scrollIntoView({ behavior:'smooth', block:'nearest' });
-        }
-      });
-    }, 100);
-
-  } else if (type === 'week') {
-    // Aller à la semaine courante
-    currentWeekStart = getWeekStart(today);
-    renderAgenda();
-
-  } else if (type === 'month') {
-    // Afficher un résumé du mois dans une modal légère
-    showMonthView();
-
-  } else if (type === 'all') {
-    // Retour à la vue semaine normale sans filtre
-    currentWeekStart = getWeekStart(today);
-    renderAgenda();
-  }
+  $('week-nav-bar').style.display  = type === 'week'  ? 'flex' : 'none';
+  $('month-nav-bar').style.display = type === 'month' ? 'block' : 'none';
+  if (type === 'today')      renderViewToday();
+  else if (type === 'week')  { currentWeekStart = getWeekStart(new Date()); renderViewWeek(); }
+  else if (type === 'month') { currentMonthDate = new Date(); renderViewMonth(); }
 }
 
-// ── VUE MOIS ──────────────────────────────────────────────
-function showMonthView() {
-  const today = new Date();
-  const year  = today.getFullYear();
-  const month = today.getMonth();
-  const MOIS_LONG = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-  const JOURS_COURTS = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
-
-  // Réservations du mois
-  const monthStr = `${year}-${String(month+1).padStart(2,'0')}`;
-  const monthResas = allResas.filter(r => r.date.startsWith(monthStr));
-
-  // Grouper par date
-  const byDate = {};
-  monthResas.forEach(r => { (byDate[r.date]||(byDate[r.date]=[])).push(r); });
-
-  // Premier jour du mois
-  const firstDay = new Date(year, month, 1);
-  const lastDay  = new Date(year, month+1, 0);
-  const startDow = firstDay.getDay(); // 0=dim
-  const totalDays = lastDay.getDate();
-  const todayStr = toDateStr(today);
-  const totalCouverts = monthResas.reduce((s,r)=>s+r.couverts, 0);
-
-  // Construire la grille
-  let cells = '';
-  // Entêtes
-  JOURS_COURTS.forEach(j => { cells += `<div style="text-align:center;font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--gris);padding:6px 2px">${j}</div>`; });
-  // Cases vides avant le 1er
-  for (let i=0; i<startDow; i++) cells += '<div></div>';
-  // Jours
-  for (let d=1; d<=totalDays; d++) {
-    const ds = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const resas = byDate[ds] || [];
-    const isToday = ds === todayStr;
-    const hasResa = resas.length > 0;
-    const totC = resas.reduce((s,r)=>s+r.couverts, 0);
-    cells += `
-      <div onclick="goToWeekOf('${ds}')" style="
-        border-radius:8px; padding:6px 4px; text-align:center; cursor:${hasResa?'pointer':'default'};
-        background:${isToday?'var(--bordeaux)':hasResa?'rgba(107,26,42,0.07)':'transparent'};
-        border:${isToday?'none':'1.5px solid '+(hasResa?'var(--bordeaux)':'var(--gris-clair)')};
-        transition:background 0.15s;
-        ${hasResa&&!isToday?'':''}
-      " ${hasResa?'title="'+resas.length+' résa · '+totC+' couverts"':''}>
-        <div style="font-size:0.88rem;font-weight:700;color:${isToday?'white':hasResa?'var(--bordeaux)':'var(--gris)'}">${d}</div>
-        ${hasResa ? `<div style="font-size:0.6rem;font-weight:700;color:${isToday?'rgba(255,255,255,0.85)':'var(--bordeaux)'};margin-top:1px">${resas.length}r·${totC}c</div>` : ''}
-      </div>`;
-  }
-
-  // Injecter dans le modal mois
-  let existing = $('month-modal');
-  if (existing) existing.remove();
-
-  const modal = document.createElement('div');
-  modal.id = 'month-modal';
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;';
-  modal.innerHTML = `
-    <div style="background:var(--blanc);border-radius:14px;padding:28px 24px;width:100%;max-width:480px;box-shadow:0 24px 60px rgba(0,0,0,0.25);max-height:90vh;overflow-y:auto;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-        <div>
-          <div style="font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--bordeaux)">${MOIS_LONG[month]} ${year}</div>
-          <div style="font-size:0.75rem;color:var(--gris);margin-top:2px">${monthResas.length} réservation${monthResas.length!==1?'s':''} · ${totalCouverts} couverts</div>
-        </div>
-        <button onclick="document.getElementById('month-modal').remove()" style="background:none;border:1.5px solid var(--gris-clair);border-radius:6px;padding:6px 12px;cursor:pointer;font-size:1rem;color:var(--gris)">✕</button>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">
-        ${cells}
-      </div>
-      <div style="margin-top:16px;font-size:0.72rem;color:var(--gris);text-align:center;">Cliquez sur un jour pour y naviguer</div>
-    </div>`;
-  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
-  document.body.appendChild(modal);
+function changeWeek(dir) {
+  currentWeekStart = new Date(currentWeekStart);
+  currentWeekStart.setDate(currentWeekStart.getDate() + dir*7);
+  renderViewWeek();
 }
 
-function goToWeekOf(dateStr) {
-  const d = new Date(dateStr+'T12:00:00');
-  currentWeekStart = getWeekStart(d);
-  const monthModal = $('month-modal');
-  if (monthModal) monthModal.remove();
-  renderAgenda();
-  // Scroll vers le haut de l'agenda
-  $('section-agenda').scrollIntoView({ behavior:'smooth', block:'start' });
-}
+function goToday() { quickFilter('today'); }
 
-function toDateStr(d) {
-  return d.toISOString().split('T')[0];
+function changeMonth(dir) {
+  currentMonthDate = new Date(currentMonthDate.getFullYear(), currentMonthDate.getMonth() + dir, 1);
+  renderViewMonth();
 }
-
-function resetFilter() {} // kept for compat
 
 function renderAgenda(newId=null) {
+  if (viewMode === 'today')      renderViewToday(newId);
+  else if (viewMode === 'week')  renderViewWeek(newId);
+  else if (viewMode === 'month') renderViewMonth();
+}
+
+function updateStats() {
   const todayStr = toDateStr(new Date());
   const futureR = allResas.filter(r=>r.date>=todayStr);
-
   $('stat-bar').innerHTML = `
     <div class="stat-chip"><div class="val">${allResas.length}</div><div class="lbl">Total résa</div></div>
     <div class="stat-chip"><div class="val">${allResas.filter(r=>r.date===todayStr).length}</div><div class="lbl">Aujourd'hui</div></div>
     <div class="stat-chip"><div class="val">${futureR.reduce((s,r)=>s+r.couverts,0)}</div><div class="lbl">Couverts à venir</div></div>`;
+}
 
-  // Calcule les 7 jours (dim→sam)
-  const days = [];
-  for (let i=0; i<7; i++) {
-    const d = new Date(currentWeekStart);
-    d.setDate(d.getDate()+i);
-    days.push(d);
-  }
+function buildResaCard(r, newId=null) {
+  const copied = !!r.copied;
+  return `<div class="resa-card${newId===r.id?' new-flash':''}" id="card-${r.id}" style="margin-bottom:8px;">
+    <div class="resa-time">${r.heure?r.heure.slice(0,5).replace(':','h'):'—'}</div>
+    <div class="resa-main">
+      <div class="resa-name">${escHTML(r.nom)}</div>
+      <div class="resa-meta">
+        <span class="couverts">👥 ${r.couverts} pers.</span>
+        ${r.tel?`<span>📞 ${escHTML(r.tel)}</span>`:''}
+      </div>
+      ${r.comment?`<div class="resa-comment">💬 ${escHTML(r.comment)}</div>`:''}
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+      <div class="mini-check${copied?' checked':''}" title="Recopié sur cahier" onclick="toggleCopied(event,${r.id})"></div>
+      <button class="btn-edit" onclick="openEdit(${r.id})">✏️</button>
+      <button class="btn-del" onclick="deleteResa(${r.id},'${escHTML(r.nom)}')">✕</button>
+    </div>
+  </div>`;
+}
 
-  // Label semaine
+// ── VUE AUJOURD'HUI ───────────────────────────────────────
+function renderViewToday(newId=null) {
+  const todayStr = toDateStr(new Date());
+  const d = new Date();
+  const JOURS_FULL = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+  const MOIS_LONG  = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+  const label = `${JOURS_FULL[d.getDay()]} ${d.getDate()} ${MOIS_LONG[d.getMonth()]} ${d.getFullYear()}`;
+  const resas = allResas.filter(r=>r.date===todayStr).sort((a,b)=>(a.heure||'99').localeCompare(b.heure||'99'));
+  const totC = resas.reduce((s,r)=>s+r.couverts,0);
+  let html = `<div class="day-view-header"><span>${label}</span><span class="day-view-count">${resas.length} réservation${resas.length!==1?'s':''} · ${totC} couverts</span></div>`;
+  if (!resas.length) html += `<div class="empty-state"><div class="empty-icon">📋</div><p>Aucune réservation aujourd'hui.</p></div>`;
+  else html += resas.map(r=>buildResaCard(r,newId)).join('');
+  $('agenda-view').innerHTML = html;
+  updateStats();
+}
+
+// ── VUE SEMAINE ───────────────────────────────────────────
+function renderViewWeek(newId=null) {
+  const todayStr = toDateStr(new Date());
   const JOURS = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
   const MOIS  = ['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];
-  const first = days[0], last = days[6];
-  $('week-range').textContent =
-    `${first.getDate()} ${MOIS[first.getMonth()]} — ${last.getDate()} ${MOIS[last.getMonth()]} ${last.getFullYear()}`;
-
-  const weekNum = getWeekNumber(first);
-  $('week-label-top').textContent = `Semaine ${weekNum}`;
-
-  // En-têtes jours
-  $('cal-headers').innerHTML = days.map((d,i) => {
-    const isToday = toDateStr(d) === todayStr;
+  const days = [];
+  for (let i=0; i<7; i++) { const d=new Date(currentWeekStart); d.setDate(d.getDate()+i); days.push(d); }
+  const first=days[0], last=days[6];
+  $('week-range').textContent = `${first.getDate()} ${MOIS[first.getMonth()]} — ${last.getDate()} ${MOIS[last.getMonth()]} ${last.getFullYear()}`;
+  $('week-label-top').textContent = `Semaine ${getWeekNumber(first)}`;
+  const headers = `<div class="calendar-grid" style="margin-bottom:4px">${days.map((d,i)=>{
+    const isToday=toDateStr(d)===todayStr;
     return `<div class="cal-day-header${isToday?' today-hdr':''}">${JOURS[i]}<br><small>${d.getDate()} ${MOIS[d.getMonth()]}</small></div>`;
-  }).join('');
-
-  // Colonnes jours
-  $('cal-days').innerHTML = days.map(d => {
-    const ds = toDateStr(d);
-    const isToday = ds === todayStr;
-    const dayResas = allResas.filter(r=>r.date===ds)
-      .sort((a,b)=>(a.heure||'99').localeCompare(b.heure||'99'));
-    const totC = dayResas.reduce((s,r)=>s+r.couverts,0);
-    const isEmpty = dayResas.length === 0;
-
-    const cards = dayResas.map(r => {
-      const copied = !!r.copied;
-      return `
-        <div class="mini-resa${copied?' copied':''}${newId===r.id?' new-flash':''}" id="mini-${r.id}" onclick="openDrawer(${r.id})">
-          <div class="mini-top">
-            <div class="mini-name">${escHTML(r.nom)}</div>
-            <div class="mini-time">${r.heure?r.heure.slice(0,5).replace(':','h'):'—'}</div>
-          </div>
-          <div class="mini-couverts">👥 ${r.couverts} pers.</div>
-          <div class="mini-check${copied?' checked':''}" title="Recopié sur cahier" onclick="toggleCopied(event,${r.id})"></div>
-        </div>`;
-    }).join('');
-
-    return `
-      <div class="cal-day${isToday?' today':''}${isEmpty?' empty-day':''}">
-        <div class="cal-day-num" style="display:flex;align-items:center;justify-content:space-between;">
-          <span>${d.getDate()}</span>
-          ${!isEmpty ? `<button class="btn-print" style="font-size:0.7rem;padding:2px 6px;" onclick="event.stopPropagation();imprimerJour('${ds}')">🖨️</button>` : ''}
-        </div>
-        ${!isEmpty ? `<div class="cal-day-total">${dayResas.length} résa · ${totC} cvts</div>` : ''}
-        ${cards}
+  }).join('')}</div>`;
+  const cells = `<div class="calendar-grid">${days.map(d=>{
+    const ds=toDateStr(d), isToday=ds===todayStr;
+    const dayResas=allResas.filter(r=>r.date===ds).sort((a,b)=>(a.heure||'99').localeCompare(b.heure||'99'));
+    const totC=dayResas.reduce((s,r)=>s+r.couverts,0), isEmpty=!dayResas.length;
+    const cards=dayResas.map(r=>{
+      const copied=!!r.copied;
+      return `<div class="mini-resa${copied?' copied':''}${newId===r.id?' new-flash':''}" id="mini-${r.id}" onclick="openDrawer(${r.id})">
+        <div class="mini-top"><div class="mini-name">${escHTML(r.nom)}</div><div class="mini-time">${r.heure?r.heure.slice(0,5).replace(':','h'):'—'}</div></div>
+        <div class="mini-couverts">👥 ${r.couverts} pers.</div>
+        <div class="mini-check${copied?' checked':''}" title="Recopié sur cahier" onclick="toggleCopied(event,${r.id})"></div>
       </div>`;
-  }).join('');
+    }).join('');
+    return `<div class="cal-day${isToday?' today':''}${isEmpty?' empty-day':''}">
+      <div class="cal-day-num" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>${d.getDate()}</span>
+        ${!isEmpty?`<button class="btn-print" style="font-size:0.7rem;padding:2px 6px;" onclick="event.stopPropagation();imprimerJour('${ds}')">🖨️</button>`:''}
+      </div>
+      ${!isEmpty?`<div class="cal-day-total">${dayResas.length} résa · ${totC} cvts</div>`:''}
+      ${cards}
+    </div>`;
+  }).join('')}</div>`;
+  $('agenda-view').innerHTML = headers+cells;
+  updateStats();
+}
+
+// ── VUE MOIS ──────────────────────────────────────────────
+function renderViewMonth() {
+  const year=currentMonthDate.getFullYear(), month=currentMonthDate.getMonth();
+  const MOIS_LONG=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  const MOIS_C=['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];
+  const JOURS_C=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+  const JOURS_FULL=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+  const todayStr=toDateStr(new Date());
+  $('month-label').textContent=`${MOIS_LONG[month]} ${year}`;
+  const monthStr=`${year}-${String(month+1).padStart(2,'0')}`;
+  const monthResas=allResas.filter(r=>r.date.startsWith(monthStr));
+  const totalC=monthResas.reduce((s,r)=>s+r.couverts,0);
+  $('month-total').textContent=`${monthResas.length} résa · ${totalC} couverts`;
+  const byDate={};
+  monthResas.forEach(r=>{(byDate[r.date]||(byDate[r.date]=[])).push(r);});
+  const firstDay=new Date(year,month,1), totalDays=new Date(year,month+1,0).getDate(), startDow=firstDay.getDay();
+  let calHtml=`<div class="month-grid">`;
+  JOURS_C.forEach(j=>{calHtml+=`<div class="month-hdr">${j}</div>`;});
+  for(let i=0;i<startDow;i++) calHtml+=`<div class="month-cell empty-cell"></div>`;
+  for(let d=1;d<=totalDays;d++){
+    const ds=`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const resas=byDate[ds]||[], isToday=ds===todayStr, hasResa=resas.length>0;
+    const totC=resas.reduce((s,r)=>s+r.couverts,0);
+    const cls=['month-cell',hasResa?'has-resa':'',isToday?'is-today':''].filter(Boolean).join(' ');
+    calHtml+=`<div class="${cls}" ${hasResa?`onclick="scrollToDay('${ds}')" title="${resas.length} résa · ${totC} couverts"`:''}>
+      <div class="mc-num">${d}</div>
+      ${hasResa?`<div class="mc-badge">${resas.length}r·${totC}c</div>`:''}
+    </div>`;
+  }
+  calHtml+=`</div>`;
+  const daysWithResa=Object.entries(byDate).sort((a,b)=>a[0].localeCompare(b[0]));
+  let listHtml='';
+  if(daysWithResa.length){
+    listHtml=`<div style="margin-top:28px;">`;
+    daysWithResa.forEach(([ds,resas])=>{
+      const dd=new Date(ds+'T12:00:00');
+      const lbl=`${JOURS_FULL[dd.getDay()]} ${dd.getDate()} ${MOIS_C[dd.getMonth()]}`;
+      const totC=resas.reduce((s,r)=>s+r.couverts,0);
+      const sorted=[...resas].sort((a,b)=>(a.heure||'99').localeCompare(b.heure||'99'));
+      listHtml+=`<div class="day-group" id="mday-${ds}">
+        <div class="day-label">${lbl}<span class="day-count">${resas.length} résa · ${totC} couverts</span></div>
+        ${sorted.map(r=>buildResaCard(r,null)).join('')}
+      </div>`;
+    });
+    listHtml+=`</div>`;
+  } else {
+    listHtml=`<div class="empty-state" style="margin-top:24px;"><div class="empty-icon">📋</div><p>Aucune réservation ce mois.</p></div>`;
+  }
+  $('agenda-view').innerHTML=calHtml+listHtml;
+  updateStats();
+}
+
+function scrollToDay(ds) {
+  const el=$('mday-'+ds);
+  if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 function getWeekNumber(d) {
-  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-  date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay()||7));
-  const yearStart = new Date(Date.UTC(date.getUTCFullYear(),0,1));
-  return Math.ceil((((date - yearStart) / 86400000) + 1)/7);
+  const date=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
+  date.setUTCDate(date.getUTCDate()+4-(date.getUTCDay()||7));
+  const yearStart=new Date(Date.UTC(date.getUTCFullYear(),0,1));
+  return Math.ceil((((date-yearStart)/86400000)+1)/7);
 }
+
 
 // ── CASE À COCHER "RECOPIÉ" ──────────────────────────────
 async function toggleCopied(e, id) {
@@ -1939,6 +1947,9 @@ function verifierMDP() {
 
 function demarrerApp() {
   loadPlan();
+  // Démarre en vue "Aujourd'hui", barre semaine cachée
+  $('week-nav-bar').style.display  = 'none';
+  $('month-nav-bar').style.display = 'none';
   poll();
 }
 
