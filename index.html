@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Clé des Chants — Buffet à volonté · La Chaise-Dieu</title>
+<meta name="description" content="Restaurant buffet à volonté français et cuisine du monde à La Chaise-Dieu, Haute-Loire. Ouvert 7j/7 de 11h45 à 14h.">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bx:#6B1A2A;--bxl:#8B2A3A;--bxd:#4A0F1C;--noir:#1a1a1a;--blanc:#fff;--creme:#FAF7F4;--or:#C9A84C;--orl:#E8C96A;--gris:#6b6b6b;--gc:#e8e0d8;}
+  *{box-sizing:border-box;margin:0;padding:0;}html{scroll-behavior:smooth;}body{font-family:'Lato',sans-serif;background:var(--creme);color:var(--noir);overflow-x:hidden;}
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 40px;height:68px;transition:background .4s,box-shadow .4s;}
+  nav.on{background:rgba(26,10,18,.96);box-shadow:0 2px 20px rgba(0,0,0,.3);}
+  .nl{font-family:'Playfair Display',serif;color:var(--blanc);font-size:1.15rem;letter-spacing:.04em;text-decoration:none;}
+  .nr{display:flex;gap:26px;align-items:center;}
+  .nr a{color:rgba(255,255,255,.82);text-decoration:none;font-size:.77rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;transition:color .2s;}
+  .nr a:hover{color:var(--or);}.nr .cta{background:var(--bx);color:var(--blanc)!important;padding:9px 20px;border-radius:6px;}
+  .nr .cta:hover{background:var(--bxl)!important;}
+  @media(max-width:600px){nav{padding:0 18px;}.nr a:not(.cta){display:none;}.nr{gap:0;}}
+  .hero{height:100vh;min-height:580px;position:relative;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden;}
+  .hbg{position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1600&q=80') center/cover;transform:scale(1.07);transition:transform 9s ease-out;}
+  .hbg.z{transform:scale(1);}
+  .hov{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(26,10,18,.48) 0%,rgba(74,15,28,.7) 55%,rgba(26,10,18,.88) 100%);}
+  .hc{position:relative;z-index:2;padding:0 24px;max-width:820px;}
+  .horn{color:var(--or);font-size:.77rem;letter-spacing:.5em;text-transform:uppercase;font-weight:300;margin-bottom:14px;opacity:.9;animation:fu 1s .2s both;}
+  .ht{font-family:'Playfair Display',serif;color:var(--blanc);font-size:clamp(3rem,9vw,5.6rem);font-weight:700;line-height:1.05;margin-bottom:14px;animation:fu 1s .4s both;}
+  .ht em{font-style:italic;color:var(--orl);}
+  .hs{width:52px;height:2px;background:var(--or);margin:16px auto;animation:fu 1s .55s both;}
+  .hsub{color:rgba(255,255,255,.74);font-size:.96rem;font-weight:300;letter-spacing:.06em;line-height:1.85;margin-bottom:30px;animation:fu 1s .7s both;}
+  .hb{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;animation:fu 1s .9s both;}
+  .bp{text-decoration:none;padding:14px 30px;border-radius:7px;font-size:.85rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;transition:all .2s;}
+  .bp1{background:var(--bx);color:var(--blanc);box-shadow:0 4px 20px rgba(107,26,42,.5);}
+  .bp1:hover{background:var(--bxl);transform:translateY(-2px);}
+  .bp2{background:rgba(255,255,255,.1);color:var(--blanc);border:1px solid rgba(255,255,255,.3);backdrop-filter:blur(4px);}
+  .bp2:hover{background:rgba(255,255,255,.2);transform:translateY(-2px);}
+  .hscr{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.42);font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;display:flex;flex-direction:column;align-items:center;gap:7px;animation:fu 1s 1.2s both;}
+  .hscr::after{content:'';width:1px;height:34px;background:rgba(255,255,255,.28);animation:sl 2s ease-in-out infinite;}
+  @keyframes sl{0%,100%{opacity:.3;transform:scaleY(.5)}50%{opacity:1;transform:scaleY(1)}}
+  @keyframes fu{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+  .band{background:var(--bx);display:flex;justify-content:center;flex-wrap:wrap;}
+  .bi{padding:17px 28px;display:flex;align-items:center;gap:9px;border-right:1px solid rgba(255,255,255,.13);}
+  .bi:last-child{border-right:none;}.bii{font-size:1.1rem;}
+  .bil{font-size:.63rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.58);display:block;}
+  .biv{color:var(--blanc);font-weight:700;font-size:.86rem;}
+  @media(max-width:600px){.bi{padding:12px 16px;border-right:none;border-bottom:1px solid rgba(255,255,255,.08);width:50%;}.bi:nth-child(odd){border-right:1px solid rgba(255,255,255,.08);}}
+  section{padding:84px 24px;}.inn{max-width:1100px;margin:0 auto;}
+  .sl{font-size:.7rem;font-weight:700;letter-spacing:.35em;text-transform:uppercase;color:var(--bx);margin-bottom:9px;}
+  .st{font-family:'Playfair Display',serif;font-size:clamp(1.9rem,4.5vw,2.9rem);font-weight:700;line-height:1.15;color:var(--noir);margin-bottom:13px;}
+  .st em{font-style:italic;color:var(--bx);}.ss{width:46px;height:2px;background:var(--or);margin-bottom:20px;}
+  .stx{font-size:.92rem;color:var(--gris);line-height:1.9;max-width:530px;}
+  .concept{background:var(--blanc);}
+  .cg{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;}
+  @media(max-width:768px){.cg{grid-template-columns:1fr;gap:32px;}}
+  .ciw{position:relative;}.ci{width:100%;height:420px;object-fit:cover;border-radius:12px;box-shadow:0 16px 48px rgba(107,26,42,.14);display:block;}
+  .cbadge{position:absolute;bottom:-16px;right:-16px;background:var(--bx);color:var(--blanc);width:90px;height:90px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:1.45rem;font-weight:700;box-shadow:0 8px 24px rgba(107,26,42,.4);line-height:1;}
+  .cbadge small{font-family:'Lato',sans-serif;font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;opacity:.8;margin-top:3px;}
+  @media(max-width:768px){.cbadge{right:10px;bottom:-10px;width:72px;height:72px;font-size:1.2rem;}}
+  .atouts{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:26px;}
+  .at{background:var(--creme);border-radius:8px;padding:13px 14px;border-left:3px solid var(--or);}
+  .ati{font-size:1.15rem;margin-bottom:4px;}.att{font-size:.77rem;font-weight:700;color:var(--noir);margin-bottom:2px;}
+  .atx{font-size:.71rem;color:var(--gris);line-height:1.5;}
+  .galerie{background:var(--creme);}
+  .gg{display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:220px 220px;gap:8px;margin-top:34px;border-radius:12px;overflow:hidden;}
+  @media(max-width:768px){.gg{grid-template-columns:1fr 1fr;grid-template-rows:150px 150px 150px;}.gm{grid-column:1/-1;grid-row:auto;}}
+  .gi{overflow:hidden;}.gimg{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s;}
+  .gi:hover .gimg{transform:scale(1.06);}.gm{grid-row:1/3;}
+  .gnote{text-align:center;margin-top:12px;font-size:.71rem;color:var(--gris);font-style:italic;}
+  .formule{background:var(--bxd);}.formule .sl{color:var(--or);}.formule .st{color:var(--blanc);}
+  .formule .ss{background:var(--or);}.formule .stx{color:rgba(255,255,255,.64);max-width:600px;}
+  .fc{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:40px;}
+  @media(max-width:768px){.fc{grid-template-columns:1fr;}}
+  .fcard{background:rgba(255,255,255,.06);border-radius:12px;padding:26px 20px;border:1px solid rgba(255,255,255,.1);text-align:center;transition:background .2s,transform .2s;}
+  .fcard:hover{background:rgba(255,255,255,.1);transform:translateY(-4px);}
+  .fcard.hl{background:var(--bx);border-color:var(--bxl);}.ficon{font-size:1.9rem;margin-bottom:11px;}
+  .ftit{font-family:'Playfair Display',serif;color:var(--blanc);font-size:1rem;font-weight:700;margin-bottom:7px;}
+  .ftx{font-size:.78rem;color:rgba(255,255,255,.58);line-height:1.7;}.fcard.hl .ftx{color:rgba(255,255,255,.82);}
+  .ctasec{background:var(--creme);text-align:center;padding:76px 24px;}
+  .ctasec .ss,.ctasec .st,.ctasec .sl{text-align:center;}.ctasec .ss{margin:16px auto;}.ctasec .stx{text-align:center;margin:0 auto 32px;}
+  .btnc{display:inline-block;background:var(--bx);color:var(--blanc);text-decoration:none;padding:16px 50px;border-radius:8px;font-size:.87rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;box-shadow:0 6px 24px rgba(107,26,42,.28);transition:all .2s;}
+  .btnc:hover{background:var(--bxl);transform:translateY(-2px);}
+  footer{background:var(--noir);color:rgba(255,255,255,.48);padding:46px 24px 26px;}
+  .fi{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr;gap:38px;}
+  @media(max-width:768px){.fi{grid-template-columns:1fr;gap:22px;}}
+  .flogo{font-family:'Playfair Display',serif;color:var(--or);font-size:1.2rem;margin-bottom:9px;}
+  .fdesc{font-size:.77rem;line-height:1.85;color:rgba(255,255,255,.4);}
+  .fct{font-size:.67rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.62);margin-bottom:11px;}
+  .fc2 p{font-size:.79rem;line-height:1.95;}.fc2 a{color:rgba(255,255,255,.46);text-decoration:none;font-size:.79rem;display:block;line-height:1.95;transition:color .2s;}
+  .fc2 a:hover{color:var(--or);}
+  .fb{max-width:1100px;margin:26px auto 0;padding-top:16px;border-top:1px solid rgba(255,255,255,.07);display:flex;justify-content:space-between;flex-wrap:wrap;gap:5px;}
+  .fb p{font-size:.68rem;}
+  .r{opacity:0;transform:translateY(26px);transition:opacity .7s,transform .7s;}.r.v{opacity:1;transform:translateY(0);}
+  .d1{transition-delay:.1s;}.d2{transition-delay:.2s;}.d3{transition-delay:.3s;}.d4{transition-delay:.4s;}
+</style>
+</head>
+<body>
+<nav id="nav">
+  <a href="/" class="nl">La Clé des Chants</a>
+  <div class="nr">
+    <a href="#concept">Le restaurant</a>
+    <a href="#galerie">Galerie</a>
+    <a href="#formule">Formule</a>
+    <a href="reservation.html" class="cta">Réserver</a>
+  </div>
+</nav>
+<div class="hero">
+  <div class="hbg" id="hbg"></div>
+  <div class="hov"></div>
+  <div class="hc">
+    <div class="horn">Buffet à volonté · La Chaise-Dieu</div>
+    <h1 class="ht">Une table,<br><em>mille saveurs</em></h1>
+    <div class="hs"></div>
+    <p class="hsub">Cuisine française &amp; du monde · 75 couverts<br>Ouvert 7 jours sur 7 · 11h45 – 14h00</p>
+    <div class="hb">
+      <a href="reservation.html" class="bp bp1">Réserver une table</a>
+      <a href="#concept" class="bp bp2">Découvrir</a>
+    </div>
+  </div>
+  <div class="hscr">Défiler</div>
+</div>
+<div class="band">
+  <div class="bi"><div class="bii">🕐</div><div><span class="bil">Horaires</span><span class="biv">11h45 – 14h00</span></div></div>
+  <div class="bi"><div class="bii">📅</div><div><span class="bil">Ouverture</span><span class="biv">Lundi – Dimanche</span></div></div>
+  <div class="bi"><div class="bii">👥</div><div><span class="bil">Capacité</span><span class="biv">75 couverts</span></div></div>
+  <div class="bi"><div class="bii">📍</div><div><span class="bil">Adresse</span><span class="biv">La Chaise-Dieu, 43</span></div></div>
+</div>
+<section class="concept" id="concept">
+  <div class="inn">
+    <div class="cg">
+      <div class="ciw r">
+        <img class="ci" src="https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?w=800&q=80" alt="Salle du restaurant" loading="lazy">
+        <div class="cbadge">75<small>couverts</small></div>
+      </div>
+      <div>
+        <div class="sl r">Le restaurant</div>
+        <h2 class="st r d1">Un buffet qui<br><em>fait voyager</em></h2>
+        <div class="ss r d2"></div>
+        <p class="stx r d2">La Clé des Chants vous accueille dans un cadre chaleureux au cœur de La Chaise-Dieu, en Haute-Loire. Notre buffet à volonté marie les saveurs de la cuisine française traditionnelle aux influences du monde entier.</p>
+        <p class="stx r d3" style="margin-top:11px;">Des plats préparés chaque jour avec soin, des produits de qualité, et une atmosphère conviviale — venez vous régaler en famille, entre amis ou entre collègues.</p>
+        <div class="atouts">
+          <div class="at r d1"><div class="ati">🇫🇷</div><div class="att">Cuisine française</div><div class="atx">Plats du terroir revisités</div></div>
+          <div class="at r d2"><div class="ati">🌍</div><div class="att">Cuisine du monde</div><div class="atx">Asie, Maghreb et ailleurs</div></div>
+          <div class="at r d3"><div class="ati">🌿</div><div class="att">Fait maison</div><div class="atx">Préparations quotidiennes</div></div>
+          <div class="at r d4"><div class="ati">☀️</div><div class="att">Terrasse</div><div class="atx">20 places en extérieur</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="galerie" id="galerie">
+  <div class="inn">
+    <div class="sl r">Galerie</div>
+    <h2 class="st r d1">Des plats, <em>des moments</em></h2>
+    <div class="ss r d2"></div>
+    <div class="gg r">
+      <div class="gi gm"><img class="gimg" src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=900&q=80" alt="Buffet" loading="lazy"></div>
+      <div class="gi"><img class="gimg" src="https://images.unsplash.com/photo-1600891964092-4316c288032e?w=500&q=80" alt="Plat chaud" loading="lazy"></div>
+      <div class="gi"><img class="gimg" src="https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=500&q=80" alt="Plat coloré" loading="lazy"></div>
+      <div class="gi"><img class="gimg" src="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=500&q=80" alt="Dessert" loading="lazy"></div>
+      <div class="gi"><img class="gimg" src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=500&q=80" alt="Salle" loading="lazy"></div>
+    </div>
+    <p class="gnote">Photos illustratives — à remplacer par vos propres photos</p>
+  </div>
+</section>
+<section class="formule" id="formule">
+  <div class="inn">
+    <div class="sl">Notre formule</div>
+    <h2 class="st r">Le buffet à volonté,<br><em>sans retenue</em></h2>
+    <div class="ss"></div>
+    <p class="stx r">Servez-vous autant de fois que vous le souhaitez parmi une large sélection de plats chauds, salades, fromages et desserts. Une formule unique, au prix unique.</p>
+    <div class="fc">
+      <div class="fcard r d1"><div class="ficon">🥗</div><div class="ftit">Entrées &amp; salades</div><div class="ftx">Crudités, charcuteries, salades composées, soupes du jour</div></div>
+      <div class="fcard hl r d2"><div class="ficon">🍽️</div><div class="ftit">Plats chauds</div><div class="ftx">Cuisine française &amp; du monde, viandes, poissons, accompagnements</div></div>
+      <div class="fcard r d3"><div class="ficon">🍮</div><div class="ftit">Desserts</div><div class="ftx">Pâtisseries maison, fruits, fromages, café</div></div>
+    </div>
+  </div>
+</section>
+<section class="ctasec" id="reserver">
+  <div class="inn">
+    <div class="sl r">Réservation</div>
+    <h2 class="st r d1">Venez nous rendre visite</h2>
+    <div class="ss r d2"></div>
+    <p class="stx r d2">Réservez votre table en quelques secondes. La réservation est recommandée pour garantir votre place, notamment le week-end.</p>
+    <div style="margin-top:30px" class="r d3"><a href="reservation.html" class="btnc">Réserver ma table</a></div>
+  </div>
+</section>
+<footer>
+  <div class="fi">
+    <div>
+      <div class="flogo">La Clé des Chants</div>
+      <p class="fdesc">Buffet à volonté français &amp; cuisine du monde.<br>Une expérience gourmande au cœur de la Haute-Loire.</p>
+    </div>
+    <div class="fc2"><div class="fct">Horaires</div><p>Lundi – Dimanche<br>11h45 – 14h00</p></div>
+    <div class="fc2">
+      <div class="fct">Accès</div>
+      <p>La Chaise-Dieu<br>Haute-Loire (43)</p>
+      <a href="reservation.html" style="margin-top:9px;color:var(--or)">Réserver →</a>
+    </div>
+  </div>
+  <div class="fb">
+    <p>© 2025 La Clé des Chants — Tous droits réservés</p>
+    <p>La Chaise-Dieu, Haute-Loire</p>
+  </div>
+</footer>
+<script>
+window.addEventListener('scroll',()=>{document.getElementById('nav').classList.toggle('on',window.scrollY>50);});
+window.addEventListener('load',()=>{document.getElementById('hbg').classList.add('z');});
+const ob=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting){x.target.classList.add('v');ob.unobserve(x.target);}});},{threshold:.1});
+document.querySelectorAll('.r').forEach(el=>ob.observe(el));
+</script>
+</body>
+</html>
