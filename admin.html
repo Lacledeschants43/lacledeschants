@@ -372,26 +372,44 @@
 
   /* Vue mois */
   .month-grid {
-    display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-top:8px;
+    display:grid; grid-template-columns:repeat(7,1fr); gap:5px; margin-top:8px;
+  }
+  @media(max-width:768px){
+    .month-grid { gap:3px; }
+    .mc-mini-resa { display:none; }
+    .month-cell { min-height:44px; }
   }
   .month-hdr {
     text-align:center; font-size:0.68rem; font-weight:700; letter-spacing:0.1em;
     text-transform:uppercase; color:var(--gris); padding:6px 2px;
   }
   .month-cell {
-    border-radius:8px; padding:7px 5px; text-align:center; min-height:56px;
+    border-radius:8px; padding:7px 6px; min-height:70px;
     border:1.5px solid var(--gris-clair); background:var(--blanc);
-    cursor:default; transition:all 0.15s; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:3px;
+    cursor:default; transition:all 0.15s;
+    display:flex; flex-direction:column; align-items:stretch; gap:3px;
   }
-  .month-cell.has-resa { border-color:var(--bordeaux); cursor:pointer; background:rgba(107,26,42,0.04); }
-  .month-cell.has-resa:hover { background:rgba(107,26,42,0.1); transform:translateY(-1px); }
-  .month-cell.is-today { background:var(--bordeaux); border-color:var(--bordeaux); }
-  .month-cell.is-today .mc-num { color:var(--blanc); }
+  .month-cell.has-resa { border-color:var(--bordeaux); cursor:pointer; background:rgba(107,26,42,0.03); }
+  .month-cell.has-resa:hover { background:rgba(107,26,42,0.07); }
+  .month-cell.is-today { border-color:var(--bordeaux); box-shadow:0 0 0 2px rgba(107,26,42,0.2); }
   .month-cell.empty-cell { background:transparent; border-color:transparent; }
-  .mc-num { font-size:0.88rem; font-weight:700; color:var(--gris); }
+  .mc-num {
+    font-size:0.82rem; font-weight:700; color:var(--gris);
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:3px;
+  }
+  .mc-num.today-num { color:var(--blanc); background:var(--bordeaux); border-radius:4px; padding:1px 5px; align-self:flex-start; }
   .month-cell.has-resa .mc-num { color:var(--bordeaux); }
-  .mc-badge { font-size:0.58rem; font-weight:700; color:var(--bordeaux); background:rgba(107,26,42,0.1); border-radius:99px; padding:1px 5px; white-space:nowrap; }
-  .month-cell.is-today .mc-badge { background:rgba(255,255,255,0.25); color:var(--blanc); }
+  .mc-mini-resa {
+    background:rgba(107,26,42,0.08); border-left:2px solid var(--bordeaux);
+    border-radius:3px; padding:2px 5px; font-size:0.6rem; font-weight:700;
+    color:var(--bordeaux); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    line-height:1.4;
+  }
+  .mc-mini-resa.copied { background:rgba(45,122,79,0.1); border-left-color:var(--success); color:var(--success); opacity:0.75; }
+  .month-cell.is-today .mc-mini-resa { background:rgba(255,255,255,0.15); border-left-color:rgba(255,255,255,0.6); color:var(--blanc); }
+  .mc-more { font-size:0.58rem; color:var(--gris); font-style:italic; text-align:center; margin-top:1px; }
+  .month-cell.is-today .mc-more { color:rgba(255,255,255,0.7); }
   .month-label { font-family:'Playfair Display',serif; font-size:1.3rem; color:var(--bordeaux); margin-bottom:4px; }
   .month-nav { display:flex; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
   .month-total { font-size:0.75rem; color:var(--gris); }
@@ -1315,11 +1333,17 @@ function renderViewMonth() {
   for(let d=1;d<=totalDays;d++){
     const ds=`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const resas=byDate[ds]||[], isToday=ds===todayStr, hasResa=resas.length>0;
-    const totC=resas.reduce((s,r)=>s+r.couverts,0);
+    const sorted=[...resas].sort((a,b)=>(a.heure||'99').localeCompare(b.heure||'99'));
     const cls=['month-cell',hasResa?'has-resa':'',isToday?'is-today':''].filter(Boolean).join(' ');
-    calHtml+=`<div class="${cls}" ${hasResa?`onclick="scrollToDay('${ds}')" title="${resas.length} résa · ${totC} couverts"`:''}>
-      <div class="mc-num">${d}</div>
-      ${hasResa?`<div class="mc-badge">${resas.length}r·${totC}c</div>`:''}
+    const MAX=3;
+    const miniCards=sorted.slice(0,MAX).map(r=>{
+      const h=r.heure?r.heure.slice(0,5).replace(':','h')+' ':'';
+      return `<div class="mc-mini-resa${r.copied?' copied':''}" onclick="event.stopPropagation();openDrawer(${r.id})" title="${escHTML(r.nom)} · ${r.couverts}p">${h}${escHTML(r.nom)}</div>`;
+    }).join('');
+    const extra=sorted.length>MAX?`<div class="mc-more">+${sorted.length-MAX} autre${sorted.length-MAX>1?'s':''}</div>`:'';
+    calHtml+=`<div class="${cls}" ${hasResa?`onclick="scrollToDay('${ds}')"`:''}>
+      <div class="mc-num${isToday?' today-num':''}"><span>${d}</span></div>
+      ${miniCards}${extra}
     </div>`;
   }
   calHtml+=`</div>`;
