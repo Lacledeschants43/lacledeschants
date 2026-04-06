@@ -1478,8 +1478,9 @@ let currentWeekStart = getWeekStart(new Date());
 function getWeekStart(date) {
   const d = new Date(date);
   d.setHours(0,0,0,0);
-  const day = d.getDay(); // 0=dim
-  d.setDate(d.getDate() - day); // recule au dimanche
+  const day = d.getDay(); // 0=dim, 1=lun…
+  const diff = (day === 0) ? -6 : 1 - day; // recule au lundi
+  d.setDate(d.getDate() + diff);
   return d;
 }
 
@@ -1629,7 +1630,7 @@ function renderViewMonth() {
   const year=currentMonthDate.getFullYear(), month=currentMonthDate.getMonth();
   const MOIS_LONG=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
   const MOIS_C=['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];
-  const JOURS_C=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+const JOURS = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
   const JOURS_FULL=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
   const todayStr=toDateStr(new Date());
   $('month-label').textContent=`${MOIS_LONG[month]} ${year}`;
