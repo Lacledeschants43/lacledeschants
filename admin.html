@@ -6,34 +6,6 @@
 <title>La Clé des Chants — Administration</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
-
-/* ── STATUTS RÉSERVATION ── */
-.status-steps {
-  display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap;
-}
-.status-step {
-  display: flex; align-items: center; gap: 5px;
-  font-size: 0.72rem; font-weight: 700; padding: 5px 10px;
-  border-radius: 99px; cursor: pointer; border: 1.5px solid var(--gris-clair);
-  background: var(--blanc); color: var(--gris);
-  font-family: 'Lato', sans-serif; transition: all 0.2s;
-  text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap;
-  user-select: none;
-}
-.status-step:hover { border-color: var(--bordeaux); color: var(--bordeaux); }
-.status-step.active-prise   { background: rgba(107,26,42,0.08); border-color: var(--bordeaux); color: var(--bordeaux); }
-.status-step.active-notee   { background: rgba(201,168,76,0.18); border-color: #a07800; color: #7a5c00; }
-.status-step.active-arrivee { background: rgba(45,122,79,0.12); border-color: var(--success); color: var(--success); }
-  
-.autocomplete-item {
-  padding: 10px 14px; cursor: pointer; font-size: 0.9rem;
-  display: flex; align-items: center; justify-content: space-between;
-  border-bottom: 1px solid var(--gris-clair); transition: background 0.15s;
-}
-.autocomplete-item:last-child { border-bottom: none; }
-.autocomplete-item:hover, .autocomplete-item.active { background: rgba(107,26,42,0.06); }
-.autocomplete-name { font-weight: 700; color: var(--noir); }
-.autocomplete-meta { font-size: 0.75rem; color: var(--gris); }
   /* ── ÉCRAN DE CONNEXION ── */
   .login-overlay {
     position:fixed; inset:0; background:#2a0a12;
@@ -392,16 +364,13 @@
   .card-actions { display:flex; align-items:center; gap:6px; flex-shrink:0; }
 
   #agenda-view .mini-check {
-  width:18px; height:18px; border:1.5px solid var(--gris-clair); border-radius:3px;
-  background:var(--blanc); cursor:pointer; display:flex; align-items:center; justify-content:center;
-  transition:all 0.15s; flex-shrink:0;
-}
-#agenda-view .mini-check:hover { border-color:var(--bordeaux); }
-#agenda-view .mini-check.checked { background:var(--bordeaux); border-color:var(--bordeaux); }
-#agenda-view .mini-check.checked::after { content:'✓'; color:white; font-size:0.65rem; font-weight:900; }
-#agenda-view .mini-check.checked-arrivee { background:var(--success); border-color:var(--success); }
-#agenda-view .mini-check.checked-arrivee::after { content:'✓'; color:white; font-size:0.65rem; font-weight:900; }
-  
+    width:18px; height:18px; border:1.5px solid var(--gris-clair); border-radius:3px;
+    background:var(--blanc); cursor:pointer; display:flex; align-items:center; justify-content:center;
+    transition:all 0.15s; flex-shrink:0;
+  }
+  #agenda-view .mini-check:hover { border-color:var(--success); }
+  #agenda-view .mini-check.checked { background:var(--success); border-color:var(--success); }
+  #agenda-view .mini-check.checked::after { content:'✓'; color:white; font-size:0.65rem; font-weight:900; }
   .day-group { margin-bottom:28px; }
   .day-label { font-family:'Playfair Display',serif; font-size:1rem; color:var(--bordeaux); border-bottom:2px solid var(--bordeaux); padding-bottom:6px; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; }
   .day-count { font-family:'Lato',sans-serif; font-size:0.75rem; color:var(--gris); font-weight:400; }
@@ -517,10 +486,8 @@
     transition:all 0.15s; flex-shrink:0;
   }
   .mini-check:hover { border-color:var(--success); }
-.mini-check.checked { background: var(--bordeaux); border-color: var(--bordeaux); }
-.mini-check.checked::after { content:'✓'; color:white; font-size:0.65rem; font-weight:900; }
-.mini-check.checked-arrivee { background: var(--success); border-color: var(--success); }
-.mini-check.checked-arrivee::after { content:'✓'; color:white; font-size:0.65rem; font-weight:900; }
+  .mini-check.checked { background:var(--success); border-color:var(--success); }
+  .mini-check.checked::after { content:'✓'; color:white; font-size:0.65rem; font-weight:900; }
 
   /* ── DRAWER DÉTAIL ── */
   .drawer-overlay {
@@ -739,13 +706,11 @@
       <div class="form-title">Nouvelle réservation</div>
       <div class="form-subtitle">Champs marqués <span class="form-required">*</span> obligatoires</div>
       <div class="form-grid">
-        <div class="form-group full" style="position:relative">
-  <label for="f-nom">Nom du client <span class="form-required">*</span></label>
-  <input type="text" id="f-nom" placeholder="Nom et prénom" autocomplete="off"
-    oninput="autocompleteNom()" onblur="setTimeout(()=>fermerAutocomplete(),200)">
-  <span class="field-error" id="err-nom">Veuillez saisir un nom.</span>
-  <div class="autocomplete-list" id="autocomplete-list"></div>
-</div>
+        <div class="form-group full">
+          <label for="f-nom">Nom du client <span class="form-required">*</span></label>
+          <input type="text" id="f-nom" placeholder="Nom et prénom" autocomplete="name">
+          <span class="field-error" id="err-nom">Veuillez saisir un nom.</span>
+        </div>
         <div class="form-group">
           <label for="f-date">Date <span class="form-required">*</span></label>
           <input type="date" id="f-date">
@@ -1116,44 +1081,6 @@ const HEADERS = {
   'Prefer': 'return=representation'
 };
 const POLL_INTERVAL = 5000; // vérification toutes les 5 secondes
-
-// ── AUTOCOMPLETE NOM ─────────────────────────────────────
-function autocompleteNom() {
-  const q = normaliserNom($('f-nom').value);
-  const list = $('autocomplete-list');
-  if (q.length < 1) { fermerAutocomplete(); return; }
-
-  // Dédoublonner les clients connus
-  const seen = new Set();
-  const clients = [];
-  allResas.forEach(r => {
-    const key = normaliserNom(r.nom);
-    if (!seen.has(key) && key.includes(q)) {
-      seen.add(key);
-      clients.push({ nom: r.nom, tel: r.tel || '' });
-    }
-  });
-
-  if (!clients.length) { fermerAutocomplete(); return; }
-
-  list.innerHTML = clients.slice(0, 8).map((c, i) => `
-    <div class="autocomplete-item" onmousedown="choisirClient('${escHTML(c.nom)}','${escHTML(c.tel)}')" >
-      <span class="autocomplete-name">${escHTML(c.nom)}</span>
-      ${c.tel ? `<span class="autocomplete-meta">📞 ${escHTML(c.tel)}</span>` : ''}
-    </div>
-  `).join('');
-  list.style.display = 'block';
-}
-
-function choisirClient(nom, tel) {
-  $('f-nom').value = nom;
-  if (tel) $('f-phone').value = tel;
-  fermerAutocomplete();
-}
-
-function fermerAutocomplete() {
-  $('autocomplete-list').style.display = 'none';
-}  
 
 // ── SITE CONFIG ──────────────────────────────────────────
 const SITE_CFG_URL = 'https://zwjgenpxsjvzmxqoxepv.supabase.co/rest/v1/site_config';
@@ -1551,9 +1478,8 @@ let currentWeekStart = getWeekStart(new Date());
 function getWeekStart(date) {
   const d = new Date(date);
   d.setHours(0,0,0,0);
-  const day = d.getDay(); // 0=dim, 1=lun…
-  const diff = (day === 0) ? -6 : 1 - day; // recule au lundi
-  d.setDate(d.getDate() + diff);
+  const day = d.getDay(); // 0=dim
+  d.setDate(d.getDate() - day); // recule au dimanche
   return d;
 }
 
@@ -1615,36 +1541,27 @@ function updateStats() {
     <div class="stat-chip"><div class="val">${futureR.reduce((s,r)=>s+r.couverts,0)}</div><div class="lbl">Couverts à venir</div></div>`;
 }
 
-const STATUS_CONFIG = {
-  prise:   { label: 'Réservation prise',      icon: '📋', next: 'notee'   },
-  notee:   { label: 'Notée sur le cahier',     icon: '✏️', next: 'arrivee' },
-  arrivee: { label: 'Arrivée',                 icon: '✅', next: 'prise'   },
-};
-
 function buildResaCard(r, newId=null) {
-  const status = r.status || 'prise';
+  const copied = !!r.copied;
   return `
     <div class="resa-card${newId===r.id?' new-flash':''}" id="card-${r.id}">
-      <div class="resa-time">${r.heure ? r.heure.slice(0,5).replace(':','h') : '—'}</div>
+      <div class="resa-time">${r.heure?r.heure.slice(0,5).replace(':','h'):'—'}</div>
       <div class="resa-main">
         <div class="resa-name">${escHTML(r.nom)}</div>
         <div class="resa-meta">
           <span class="couverts">👥 ${r.couverts} pers.</span>
-          ${r.tel ? `<span>📞 ${escHTML(r.tel)}</span>` : ''}
+          ${r.tel?`<span>📞 ${escHTML(r.tel)}</span>`:''}
         </div>
-        ${r.comment ? `<div class="resa-comment">💬 ${escHTML(r.comment)}</div>` : ''}
-      </div>
-      <div class="status-steps">
-        <div class="status-step${status==='prise'   ? ' active-prise'   : ''}" onclick="setStatus(event,${r.id},'prise')">📋 Prise</div>
-        <div class="status-step${status==='notee'   ? ' active-notee'   : ''}" onclick="setStatus(event,${r.id},'notee')">✏️ Cahier</div>
-        <div class="status-step${status==='arrivee' ? ' active-arrivee' : ''}" onclick="setStatus(event,${r.id},'arrivee')">✅ Arrivée</div>
+        ${r.comment?`<div class="resa-comment">💬 ${escHTML(r.comment)}</div>`:''}
       </div>
       <div class="card-actions">
-        <button class="btn-edit" onclick="openEdit(${r.id})">✏️</button>
+        <div class="mini-check${copied?' checked':''}" title="Recopié sur cahier" onclick="toggleCopied(event,${r.id})" style="width:18px;height:18px;border:1.5px solid var(--gris-clair);border-radius:3px;background:var(--blanc);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;flex-shrink:0;"></div>
+        <button class="btn-edit" onclick="openEdit(${r.id})">✏️ Modifier</button>
         <button class="btn-del" onclick="deleteResa(${r.id},'${escHTML(r.nom)}')">✕</button>
       </div>
     </div>`;
 }
+
 // ── VUE AUJOURD'HUI ───────────────────────────────────────
 function renderViewToday(newId=null) {
   const realTodayStr = toDateStr(new Date());
@@ -1687,12 +1604,11 @@ function renderViewWeek(newId=null) {
     const totC=dayResas.reduce((s,r)=>s+r.couverts,0), isEmpty=!dayResas.length;
     const cards=dayResas.map(r=>{
       const copied=!!r.copied;
-      const checkClass = r.status === 'arrivee' ? 'checked-arrivee' : (r.status === 'notee' ? 'checked' : '');
       const h=r.heure?r.heure.slice(0,5).replace(':','h'):null;
       return `<div class="mc-mini-resa${copied?' copied':''}${newId===r.id?' new-flash':''}" id="mini-${r.id}" onclick="openDrawer(${r.id})" style="position:relative;">
         <div class="mc-mini-resa-nom">${escHTML(r.nom)}</div>
         <div class="mc-mini-resa-couverts">&#128101; ${r.couverts} couvert${r.couverts>1?'s':''}${h?' &middot; '+h:''}</div>
-       <div class="mini-check${checkClass ? ' '+checkClass : ''}" title="Recopié sur cahier" onclick="toggleCopied(event,${r.id})"></div>
+        <div class="mini-check${copied?' checked':''}" title="Recopié sur cahier" onclick="toggleCopied(event,${r.id})"></div>
       </div>`;
     }).join('');
     return `<div class="cal-day${isToday?' today':''}${isEmpty?' empty-day':''}">
@@ -1713,7 +1629,7 @@ function renderViewMonth() {
   const year=currentMonthDate.getFullYear(), month=currentMonthDate.getMonth();
   const MOIS_LONG=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
   const MOIS_C=['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];
-const JOURS = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+  const JOURS_C=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
   const JOURS_FULL=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
   const todayStr=toDateStr(new Date());
   $('month-label').textContent=`${MOIS_LONG[month]} ${year}`;
@@ -1781,47 +1697,26 @@ function getWeekNumber(d) {
 }
 
 
+// ── CASE À COCHER "RECOPIÉ" ──────────────────────────────
 async function toggleCopied(e, id) {
   e.stopPropagation();
   const r = allResas.find(x => x.id === id);
   if (!r) return;
-  const newCopied = !r.copied;
-  const newStatus = newCopied ? 'notee' : 'prise';
-  // Mise à jour optimiste
-  r.copied = newCopied;
-  r.status = newStatus;
+  const newVal = !r.copied;
+  // Mise à jour optimiste locale
+  r.copied = newVal;
   renderAgenda();
+  // Persistance Supabase
   try {
-    await apiUpdate(id, { copied: newCopied, status: newStatus });
+    await apiUpdate(id, { copied: newVal });
   } catch(err) {
-    r.copied = !newCopied;
-    r.status = newCopied ? 'prise' : 'notee';
+    // Rollback si erreur
+    r.copied = !newVal;
     renderAgenda();
     showToast('Erreur lors de la mise à jour.', 'error');
   }
 }
 
-// ── STATUT RADIO ─────────────────────────────────────────
-async function setStatus(e, id, newStatus) {
-  e.stopPropagation();
-  const r = allResas.find(x => x.id === id);
-  if (!r || r.status === newStatus) return;
-  const prev = r.status;
-  const prevCopied = r.copied;
-  r.status = newStatus;
-  r.copied = newStatus === 'notee' || newStatus === 'arrivee';
-  renderAgenda();
-  try {
-    await apiUpdate(id, { status: newStatus, copied: r.copied });
-    const labels = { prise:'📋 Réservation prise', notee:'✏️ Notée sur le cahier', arrivee:'✅ Arrivée' };
-    showToast(`${labels[newStatus]} — ${r.nom}`, 'success');
-  } catch(err) {
-    r.status = prev;
-    r.copied = prevCopied;
-    renderAgenda();
-    showToast('Erreur mise à jour statut.', 'error');
-  }
-}
 // ── DRAWER DÉTAIL ─────────────────────────────────────────
 let drawerResaId = null;
 
