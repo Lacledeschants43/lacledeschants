@@ -282,37 +282,38 @@
   .btn-tp-unassign:hover { color:var(--error); border-color:var(--error) !important; }
   .btn-tp-del { background:none; color:var(--error); border:1.5px solid var(--error) !important; border:none; margin-top:4px; }
   .btn-tp-del:hover { background:var(--error); color:var(--blanc); }
-  @media print {
-    body > *:not(#print-area) { display: none !important; }
-    #print-area { display: block !important; }
-    @page { margin: 0; size: 80mm auto; }
-  }
+@media print {
+  body > *:not(#print-area) { display: none !important; }
+  #print-area { display: block !important; }
+  @page { margin: 0; size: 80mm auto; }
+}
 
-  #print-area {
-    display: none;
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 15px;
-    width: 76mm;
-    color: #000;
-    padding: 3mm 2mm;
-    line-height: 1.5;
-  }
-  .ticket-header { text-align: center; margin-bottom: 4mm; }
-  .ticket-title { font-size: 20px; font-weight: bold; letter-spacing: 1px; margin-bottom: 2mm; }
-  .ticket-sub { font-size: 13px; line-height: 1.6; }
-  .ticket-sep { border: none; border-top: 2px dashed #000; margin: 3mm 0; }
-  .ticket-sep-thin { border: none; border-top: 1px dashed #000; margin: 2mm 0; }
-  .ticket-day { font-size: 16px; font-weight: bold; margin: 2mm 0 1mm; text-transform: uppercase; }
-  .ticket-row { display: flex; justify-content: space-between; align-items: baseline; margin: 1.5mm 0; font-size: 15px; }
-  .ticket-row-name { flex: 1; font-weight: bold; padding-right: 3mm; }
-  .ticket-row-info { text-align: right; white-space: nowrap; font-size: 14px; }
-  .ticket-comment { font-size: 13px; font-style: italic; padding-left: 4mm; margin-bottom: 1mm; }
-  .ticket-total { font-size: 14px; font-weight: bold; text-align: right; margin-top: 1mm; }
-  .ticket-footer { text-align: center; font-size: 13px; margin-top: 4mm; letter-spacing: 1px; }
-  .ticket-resa-title { font-size: 17px; font-weight: bold; text-align: center; margin: 2mm 0; text-transform: uppercase; }
-  .ticket-resa-row { display: flex; justify-content: space-between; font-size: 14px; margin: 1.5mm 0; padding-bottom: 1mm; border-bottom: 1px dotted #999; }
-  .ticket-resa-label { color: #444; }
-  .ticket-resa-val { font-weight: bold; text-align: right; }
+#print-area {
+  display: none;
+  font-family: 'Arial Black', Arial, sans-serif;
+  width: 76mm;
+  color: #000;
+  padding: 5mm 4mm;
+}
+
+.ticket-big-label {
+  font-size: 13px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #555;
+  margin-top: 6mm;
+  margin-bottom: 2mm;
+}
+
+.ticket-big-value {
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1.1;
+  word-break: break-word;
+}
+
+.ticket-sep { border: none; border-top: 3px solid #000; margin: 4mm 0; }
   .agenda-wrapper { max-width:1100px; margin:0 auto; padding:24px 16px 64px; }
   .agenda-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:16px; }
   .agenda-title { font-family:'Playfair Display',serif; font-size:1.8rem; color:var(--bordeaux); }
@@ -2031,24 +2032,31 @@ function ticketEntete(sousTitre) {
 
 // Ticket de confirmation — 1 réservation — imprimé automatiquement
 function imprimerConfirmation(resa) {
-  const d = new Date(resa.date+'T12:00:00');
+  const d = new Date(resa.date + 'T12:00:00');
   const dateStr = `${JOURS_FULL[d.getDay()]} ${d.getDate()} ${MOIS_LONG[d.getMonth()]} ${d.getFullYear()}`;
-  const now = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
 
-  let html = ticketEntete('Confirmation de reservation');
-  html += `<hr class="ticket-sep">
-    <div class="ticket-resa-title">NOUVELLE RESERVATION</div>
-    <hr class="ticket-sep-thin">
-    <div class="ticket-resa-row"><span class="ticket-resa-label">Nom</span><span class="ticket-resa-val">${escHTML(resa.nom)}</span></div>
-    <div class="ticket-resa-row"><span class="ticket-resa-label">Date</span><span class="ticket-resa-val">${dateStr}</span></div>
-    <div class="ticket-resa-row"><span class="ticket-resa-label">Heure</span><span class="ticket-resa-val">${resa.heure ? resa.heure.slice(0,5).replace(':','h') : 'Non precisee'}</span></div>
-    <div class="ticket-resa-row"><span class="ticket-resa-label">Couverts</span><span class="ticket-resa-val">${resa.couverts} personne${resa.couverts>1?'s':''}</span></div>
-    ${resa.tel ? `<div class="ticket-resa-row"><span class="ticket-resa-label">Tel</span><span class="ticket-resa-val">${escHTML(resa.tel)}</span></div>` : ''}
-    ${resa.comment ? `<hr class="ticket-sep-thin"><div class="ticket-comment">Note: ${escHTML(resa.comment)}</div>` : ''}
+  let html = `
     <hr class="ticket-sep">
-    <div class="ticket-footer">Imprime le ${new Date().toLocaleDateString('fr-FR')} a ${now}</div>
-    <div class="ticket-footer">Merci de votre reservation !</div>
+    <div class="ticket-big-label">Date</div>
+    <div class="ticket-big-value">${dateStr}</div>
+    <hr class="ticket-sep">
+    <div class="ticket-big-label">Nom</div>
+    <div class="ticket-big-value">${escHTML(resa.nom)}</div>
+    <hr class="ticket-sep">
+    <div class="ticket-big-label">Personnes</div>
+    <div class="ticket-big-value">${resa.couverts}</div>
   `;
+
+  if (resa.comment) {
+    html += `
+    <hr class="ticket-sep">
+    <div class="ticket-big-label">Commentaire</div>
+    <div class="ticket-big-value" style="font-size:22px;">${escHTML(resa.comment)}</div>
+    `;
+  }
+
+  html += `<hr class="ticket-sep">`;
+
   $('print-area').innerHTML = html;
   window.print();
 }
