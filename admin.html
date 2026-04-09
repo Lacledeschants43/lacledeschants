@@ -1658,25 +1658,22 @@ const STATUS_CONFIG = {
 };
 
 function buildResaCard(r, newId=null) {
-  const status = r.status || 'prise';
+  const copied = !!r.copied;
   return `
     <div class="resa-card${newId===r.id?' new-flash':''}" id="card-${r.id}">
-      <div class="resa-time">${r.heure ? r.heure.slice(0,5).replace(':','h') : '—'}</div>
+      <div class="resa-time">${r.heure?r.heure.slice(0,5).replace(':','h'):'—'}</div>
       <div class="resa-main">
         <div class="resa-name">${escHTML(r.nom)}</div>
         <div class="resa-meta">
           <span class="couverts">👥 ${r.couverts} pers.</span>
-          ${r.tel ? `<span>📞 ${escHTML(r.tel)}</span>` : ''}
+          ${r.tel?`<span>📞 ${escHTML(r.tel)}</span>`:''}
         </div>
-        ${r.comment ? `<div class="resa-comment">💬 ${escHTML(r.comment)}</div>` : ''}
-      </div>
-      <div class="status-steps">
-        <div class="status-step${status==='prise'   ? ' active-prise'   : ''}" onclick="setStatus(event,${r.id},'prise')">📋 Prise</div>
-        <div class="status-step${status==='notee'   ? ' active-notee'   : ''}" onclick="setStatus(event,${r.id},'notee')">✏️ Cahier</div>
-        <div class="status-step${status==='arrivee' ? ' active-arrivee' : ''}" onclick="setStatus(event,${r.id},'arrivee')">✅ Arrivée</div>
+        ${r.comment?`<div class="resa-comment">💬 ${escHTML(r.comment)}</div>`:''}
       </div>
       <div class="card-actions">
-        <button class="btn-edit" onclick="openEdit(${r.id})">✏️</button>
+        <div class="mini-check${copied?' checked':''}" title="Recopié sur cahier" onclick="toggleCopied(event,${r.id})" style="width:18px;height:18px;border:1.5px solid var(--gris-clair);border-radius:3px;background:var(--blanc);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;flex-shrink:0;"></div>
+        <button class="btn-print" onclick="event.stopPropagation();imprimerConfirmation({nom:'${escHTML(r.nom)}',date:'${r.date}',couverts:${r.couverts},heure:${r.heure?`'${r.heure}'`:null},comment:${r.comment?`'${escHTML(r.comment)}'`:null}})">🖨️</button>
+        <button class="btn-edit" onclick="openEdit(${r.id})">✏️ Modifier</button>
         <button class="btn-del" onclick="deleteResa(${r.id},'${escHTML(r.nom)}')">✕</button>
       </div>
     </div>`;
