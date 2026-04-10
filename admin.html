@@ -303,9 +303,6 @@
   .agenda-title { font-family:'Playfair Display',serif; font-size:1.8rem; color:var(--bordeaux); }
   .agenda-actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
 
-  .btn-notif { background:var(--noir); color:var(--blanc); border:none; border-radius:6px; padding:9px 16px; font-family:'Lato',sans-serif; font-size:0.78rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; cursor:pointer; transition:background 0.2s; }
-  .btn-notif:hover { background:#333; }
-  .btn-notif.enabled { background:var(--success); }
 
   .stat-bar { display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
   .stat-chip { background:var(--blanc); border:1.5px solid var(--gris-clair); border-radius:8px; padding:10px 16px; text-align:center; min-width:100px; box-shadow:0 1px 4px rgba(0,0,0,0.04); }
@@ -517,12 +514,7 @@
   .empty-state { text-align:center; padding:48px 24px; color:var(--gris); }
   .empty-icon { font-size:2.5rem; margin-bottom:12px; opacity:0.4; }
   .empty-state p { font-size:0.9rem; }
-  .notif-badge { background:var(--or); color:var(--noir); border-radius:99px; font-size:0.65rem; font-weight:700; padding:1px 7px; margin-left:6px; display:none; }
-  .notif-badge.visible { display:inline-block; }
 
-  .notif-banner { background:var(--or); color:var(--noir); padding:10px 20px; text-align:center; font-size:0.82rem; font-weight:700; display:none; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; }
-  .notif-banner.visible { display:flex; }
-  .notif-banner button { background:var(--noir); color:var(--blanc); border:none; border-radius:4px; padding:5px 14px; font-size:0.78rem; font-weight:700; cursor:pointer; font-family:'Lato',sans-serif; }
 
   .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:200; display:flex; align-items:center; justify-content:center; padding:16px; opacity:0; pointer-events:none; transition:opacity 0.25s; }
   .modal-overlay.open { opacity:1; pointer-events:all; }
@@ -577,82 +569,6 @@
   ::-webkit-scrollbar-thumb { background:var(--gris-clair); border-radius:3px; }
 
   /* ── POPUP NOUVELLE RÉSERVATION ── */
-  .popup-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 300;
-    display: flex; align-items: center; justify-content: center; padding: 16px;
-    opacity: 0; pointer-events: none;
-    transition: opacity 0.3s;
-  }
-  .popup-overlay.open { opacity: 1; pointer-events: all; }
-
-  .popup {
-    background: var(--blanc); border-radius: 16px; padding: 0;
-    width: 100%; max-width: 440px;
-    box-shadow: 0 32px 80px rgba(0,0,0,0.3);
-    transform: scale(0.9) translateY(20px);
-    transition: transform 0.3s cubic-bezier(.175,.885,.32,1.275);
-    overflow: hidden;
-  }
-  .popup-overlay.open .popup { transform: scale(1) translateY(0); }
-
-  .popup-header {
-    background: linear-gradient(135deg, var(--bordeaux-dark), var(--bordeaux));
-    padding: 24px 28px 20px;
-    position: relative;
-  }
-  .popup-header::after {
-    content: '🍽️';
-    position: absolute; top: 16px; right: 20px;
-    font-size: 2rem; opacity: 0.25;
-  }
-  .popup-badge {
-    display: inline-block;
-    background: var(--or); color: var(--noir);
-    font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
-    padding: 3px 10px; border-radius: 99px; margin-bottom: 8px;
-  }
-  .popup-title {
-    font-family: 'Playfair Display', serif;
-    color: var(--blanc); font-size: 1.4rem; font-weight: 700;
-  }
-
-  .popup-body { padding: 24px 28px; }
-
-  .popup-row {
-    display: flex; align-items: flex-start; gap: 12px;
-    padding: 10px 0; border-bottom: 1px solid var(--gris-clair);
-  }
-  .popup-row:last-of-type { border-bottom: none; }
-
-  .popup-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
-
-  .popup-row-label {
-    font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em;
-    text-transform: uppercase; color: var(--gris); margin-bottom: 2px;
-  }
-  .popup-row-val {
-    font-size: 0.95rem; color: var(--noir); font-weight: 600;
-  }
-
-  .popup-actions {
-    display: flex; gap: 10px;
-    padding: 0 28px 24px;
-  }
-  .btn-popup-ok {
-    flex: 1; background: var(--success); color: var(--blanc); border: none;
-    border-radius: 8px; padding: 13px; font-family: 'Lato', sans-serif;
-    font-size: 0.88rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-    cursor: pointer; transition: background 0.2s;
-  }
-  .btn-popup-ok:hover { background: #236640; }
-
-  .btn-popup-voir {
-    flex: 1; background: var(--bordeaux); color: var(--blanc); border: none;
-    border-radius: 8px; padding: 13px; font-family: 'Lato', sans-serif;
-    font-size: 0.88rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-    cursor: pointer; transition: background 0.2s;
-  }
-  .btn-popup-voir:hover { background: var(--bordeaux-light); }
 </style>
 </head>
 <body>
@@ -669,18 +585,12 @@
   </div>
 </div>
 
-<div class="notif-banner" id="notif-banner">
-  🔔 Activez les notifications pour être alerté à chaque réservation
-  <button onclick="activerNotifs()">Activer maintenant</button>
-  <button onclick="$('notif-banner').style.display='none'" style="background:#555">Plus tard</button>
-</div>
-
 <nav>
   <div class="nav-logo">La Clé des Chants</div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showTab('reservation',this)">Réserver</button>
     <button class="nav-tab" onclick="showTab('agenda',this)">
-      Agenda <span class="notif-badge" id="notif-badge">●</span>
+      Agenda
     </button>
     <button class="nav-tab" onclick="showTab('clients',this)">Clients</button>
     <button class="nav-tab" onclick="showTab('salle',this)">Plan de salle</button>
@@ -744,7 +654,6 @@
     <div class="agenda-header">
       <div class="agenda-title">Agenda</div>
       <div class="agenda-actions">
-        <button class="btn-notif" id="btn-notif" onclick="activerNotifs()">🔔 Activer les notifications</button>
         <button class="btn-print" onclick="imprimerSemaine()">🖨️ Imprimer la semaine</button>
       </div>
     </div>
@@ -1030,42 +939,6 @@
 
 <div class="toast" id="toast"></div>
 
-<!-- ── POPUP NOUVELLE RÉSERVATION ── -->
-<div class="popup-overlay" id="popup-overlay">
-  <div class="popup">
-    <div class="popup-header">
-      <div class="popup-badge">Nouvelle réservation</div>
-      <div class="popup-title" id="popup-nom">—</div>
-    </div>
-    <div class="popup-body">
-      <div class="popup-row">
-        <div class="popup-icon">📅</div>
-        <div><div class="popup-row-label">Date</div><div class="popup-row-val" id="popup-date">—</div></div>
-      </div>
-      <div class="popup-row">
-        <div class="popup-icon">🕐</div>
-        <div><div class="popup-row-label">Heure</div><div class="popup-row-val" id="popup-heure">—</div></div>
-      </div>
-      <div class="popup-row">
-        <div class="popup-icon">👥</div>
-        <div><div class="popup-row-label">Couverts</div><div class="popup-row-val" id="popup-couverts">—</div></div>
-      </div>
-      <div class="popup-row" id="popup-tel-row">
-        <div class="popup-icon">📞</div>
-        <div><div class="popup-row-label">Téléphone</div><div class="popup-row-val" id="popup-tel">—</div></div>
-      </div>
-      <div class="popup-row" id="popup-comment-row">
-        <div class="popup-icon">💬</div>
-        <div><div class="popup-row-label">Commentaire</div><div class="popup-row-val" id="popup-comment">—</div></div>
-      </div>
-    </div>
-    <div class="popup-actions">
-      <button class="btn-popup-ok" onclick="fermerPopup()">✓ Vu</button>
-      <button class="btn-popup-voir" onclick="voirAgenda()">📋 Voir l'agenda</button>
-    </div>
-  </div>
-</div>
-
 <script>
 
 const API_URL = 'https://zwjgenpxsjvzmxqoxepv.supabase.co/rest/v1/reservations';
@@ -1263,50 +1136,6 @@ async function apiDelete(id) {
   if (!r.ok) throw new Error('HTTP ' + r.status);
 }
 
-// ── SON ───────────────────────────────────────────────────
-// Sonnerie style téléphone : 3 bips rapides × 2 groupes
-function playSound() {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    // Fanfare courte : 4 notes montantes Do Mi Sol Do
-    [[523,0,0.15],[659,0.18,0.15],[784,0.36,0.15],[1047,0.54,0.4]].forEach(function(nf) {
-      [1, 2, 3].forEach(function(r) {
-        var o = ctx.createOscillator(), g = ctx.createGain();
-        o.connect(g); g.connect(ctx.destination);
-        o.type = 'sine'; o.frequency.value = nf[0] * r;
-        var vol = 0.45 / r;
-        var start = ctx.currentTime + nf[1];
-        var dur = nf[2] + 0.3;
-        g.gain.setValueAtTime(0, start);
-        g.gain.linearRampToValueAtTime(vol, start + 0.01);
-        g.gain.exponentialRampToValueAtTime(0.001, start + dur);
-        o.start(start); o.stop(start + dur + 0.05);
-      });
-    });
-  } catch(e) {}
-}
-
-// ── ALARME RÉPÉTÉE ────────────────────────────────────────
-const unacknowledgedResas = new Set();
-let alarmInterval = null;
-
-function startAlarmLoop() {
-  if (alarmInterval) return;
-  alarmInterval = setInterval(function() {
-    if (unacknowledgedResas.size === 0) { stopAlarmLoop(); return; }
-    playSound();
-  }, 30000);
-}
-
-function stopAlarmLoop() {
-  if (alarmInterval) { clearInterval(alarmInterval); alarmInterval = null; }
-}
-
-function acknowledgeResa(id) {
-  unacknowledgedResas.delete(id);
-  if (unacknowledgedResas.size === 0) stopAlarmLoop();
-}
-
 // ── TOAST ─────────────────────────────────────────────────
 function showToast(msg, type='success') {
   const t = $('toast');
@@ -1321,7 +1150,6 @@ function showTab(tab, btn) {
   document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
   $('section-'+tab).classList.add('active');
   btn.classList.add('active');
-  if (tab === 'agenda') { $('notif-badge').classList.remove('visible'); }
   if (tab === 'clients') { renderClients(); }
   if (tab === 'salle') { initSalle(); }
   if (tab === 'site')  { loadSiteConfig(); }
@@ -1345,99 +1173,6 @@ function buildHeures(id) {
 buildHeures('f-heure'); buildHeures('edit-heure');
 $('f-date').value = new Date().toISOString().split('T')[0];
 $('f-date').min   = new Date().toISOString().split('T')[0];
-
-// ── NOTIFICATIONS ─────────────────────────────────────────
-let notifOk = false;
-
-window.addEventListener('load', () => {
-  if ('Notification' in window && Notification.permission === 'default') {
-    $('notif-banner').classList.add('visible');
-  }
-  notifOk = 'Notification' in window && Notification.permission === 'granted'
-            && localStorage.getItem('cdc_notif') === '1';
-  updateNotifBtn();
-});
-
-async function activerNotifs() {
-  if (!('Notification' in window)) { showToast('Navigateur non compatible.','error'); return; }
-  if (Notification.permission === 'denied') {
-    showToast('Bloquées dans Chrome → cliquez 🔒 dans la barre d\'adresse → Notifications → Autoriser','error');
-    return;
-  }
-  const p = await Notification.requestPermission();
-  $('notif-banner').style.display = 'none';
-  if (p === 'granted') {
-    notifOk = true; localStorage.setItem('cdc_notif','1'); updateNotifBtn();
-    showToast('Notifications activées ! 🔔','success');
-    new Notification('✅ La Clé des Chants', { body:'Vous serez alerté à chaque réservation.' });
-  } else {
-    showToast('Permission refusée.','error');
-  }
-}
-
-function updateNotifBtn() {
-  const btn = $('btn-notif');
-  btn.textContent = notifOk ? '🔔 Notifications ON' : '🔔 Activer les notifications';
-  btn.classList.toggle('enabled', notifOk);
-}
-
-function sendNotif(r) {
-  unacknowledgedResas.add(r.id);
-  playSound();
-  startAlarmLoop();
-  if (!notifOk || Notification.permission !== 'granted') return;
-  const d = new Date(r.date+'T12:00:00');
-  const ds = d.toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'});
-  new Notification('🍽️ Nouvelle réservation', {
-    body: `${r.nom} · ${r.couverts} pers. · ${ds}${r.heure?' à '+r.heure.slice(0,5).replace(':','h'):''}`,
-    requireInteraction: true
-  });
-}
-
-// ── POPUP NOUVELLE RÉSA ──────────────────────────────────
-let currentPopupResaId = null;
-
-function ouvrirPopup(r) {
-  currentPopupResaId = r.id;
-  const d = new Date(r.date+'T12:00:00');
-  const dateStr = d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  $('popup-nom').textContent     = r.nom;
-  $('popup-date').textContent    = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
-  $('popup-heure').textContent   = r.heure ? r.heure.slice(0,5).replace(':','h') : 'Sans préférence';
-  $('popup-couverts').textContent = r.couverts + (r.couverts > 1 ? ' personnes' : ' personne');
-
-  if (r.tel) {
-    $('popup-tel').textContent = r.tel;
-    $('popup-tel-row').style.display = 'flex';
-  } else {
-    $('popup-tel-row').style.display = 'none';
-  }
-
-  if (r.comment) {
-    $('popup-comment').textContent = r.comment;
-    $('popup-comment-row').style.display = 'flex';
-  } else {
-    $('popup-comment-row').style.display = 'none';
-  }
-
-  $('popup-overlay').classList.add('open');
-}
-
-function fermerPopup() {
-  if (currentPopupResaId !== null) acknowledgeResa(currentPopupResaId);
-  currentPopupResaId = null;
-  $('popup-overlay').classList.remove('open');
-}
-
-function voirAgenda() {
-  fermerPopup();
-  // Bascule sur l'onglet agenda
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
-  $('section-agenda').classList.add('active');
-  document.querySelectorAll('.nav-tab')[1].classList.add('active');
-  $('notif-badge').classList.remove('visible');
-}
 
 
 async function submitReservation() {
@@ -1496,8 +1231,6 @@ async function poll() {
         if (!knownIds.has(r.id)) {
           // Nouvelle résa détectée !
           showToast(`🍽️ Nouvelle résa : ${r.nom} (${r.couverts} pers.)`, 'success');
-          sendNotif(r);
-          ouvrirPopup(r);
           // Si la résa est dans une autre semaine, naviguer vers elle
           const resaWeek = getWeekStart(new Date(r.date+'T12:00:00'));
           if (toDateStr(resaWeek) !== toDateStr(currentWeekStart)) {
@@ -1506,8 +1239,6 @@ async function poll() {
           if ($('section-agenda').classList.contains('active')) {
             allResas = data;
             renderAgenda(r.id);
-          } else {
-            $('notif-badge').classList.add('visible');
           }
         }
       });
