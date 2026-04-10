@@ -7,23 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
 
-/* ── STATUTS RÉSERVATION ── */
-.status-steps {
-  display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap;
-}
-.status-step {
-  display: flex; align-items: center; gap: 5px;
-  font-size: 0.72rem; font-weight: 700; padding: 5px 10px;
-  border-radius: 99px; cursor: pointer; border: 1.5px solid var(--gris-clair);
-  background: var(--blanc); color: var(--gris);
-  font-family: 'Lato', sans-serif; transition: all 0.2s;
-  text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap;
-  user-select: none;
-}
-.status-step:hover { border-color: var(--bordeaux); color: var(--bordeaux); }
-.status-step.active-prise   { background: rgba(107,26,42,0.08); border-color: var(--bordeaux); color: var(--bordeaux); }
-.status-step.active-notee   { background: rgba(201,168,76,0.18); border-color: #a07800; color: #7a5c00; }
-.status-step.active-arrivee { background: rgba(45,122,79,0.12); border-color: var(--success); color: var(--success); }
+
   
 .autocomplete-item {
   padding: 10px 14px; cursor: pointer; font-size: 0.9rem;
@@ -392,16 +376,7 @@
   .resa-comment { font-size:0.78rem; color:var(--gris); font-style:italic; margin-top:4px; }
   .card-actions { display:flex; align-items:center; gap:6px; flex-shrink:0; }
 
-  #agenda-view .mini-check {
-  width:18px; height:18px; border:1.5px solid var(--gris-clair); border-radius:3px;
-  background:var(--blanc); cursor:pointer; display:flex; align-items:center; justify-content:center;
-  transition:all 0.15s; flex-shrink:0;
-}
-#agenda-view .mini-check:hover { border-color:var(--bordeaux); }
-#agenda-view .mini-check.checked { background:var(--bordeaux); border-color:var(--bordeaux); }
-#agenda-view .mini-check.checked::after { content:'✓'; color:white; font-size:0.65rem; font-weight:900; }
-#agenda-view .mini-check.checked-arrivee { background:var(--success); border-color:var(--success); }
-#agenda-view .mini-check.checked-arrivee::after { content:'✓'; color:white; font-size:0.65rem; font-weight:900; }
+
   
   .day-group { margin-bottom:28px; }
   .day-label { font-family:'Playfair Display',serif; font-size:1rem; color:var(--bordeaux); border-bottom:2px solid var(--bordeaux); padding-bottom:6px; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; }
@@ -444,9 +419,7 @@
     transition:background 0.15s;
   }
   .mc-mini-resa:hover { background:rgba(107,26,42,0.14); }
-  .mc-mini-resa.copied { background:rgba(45,122,79,0.1); border-left-color:var(--success); opacity:0.8; }
   .mc-mini-resa-nom { font-weight:700; color:var(--bordeaux); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .mc-mini-resa.copied .mc-mini-resa-nom { color:var(--success); }
   .mc-mini-resa-couverts { font-size:0.7rem; color:var(--gris); font-weight:700; margin-top:1px; }
   .mc-more { font-size:0.68rem; color:var(--gris); font-style:italic; text-align:center; margin-top:2px; }
 
@@ -500,7 +473,6 @@
     position:relative;
   }
   .mini-resa:hover { background:#f0e8e0; border-left-color:var(--bordeaux-light); }
-  .mini-resa.copied { background:#e8f5ee; border-left-color:var(--success); opacity:0.75; }
   .mini-resa.new-flash { animation:flashNew 2s ease forwards; }
   @keyframes flashNew { 0%,60%{background:#fff8e1;border-left-color:var(--or);} 100%{background:var(--creme);border-left-color:var(--bordeaux);} }
 
@@ -509,19 +481,7 @@
   .mini-time { font-size:0.68rem; font-weight:700; color:var(--bordeaux); flex-shrink:0; }
   .mini-couverts { font-size:0.68rem; color:var(--gris); margin-top:1px; }
 
-  /* checkbox "recopié" */
-  .mini-check {
-    position:absolute; top:4px; right:4px;
-    width:16px; height:16px; border:1.5px solid var(--gris-clair);
-    border-radius:3px; background:var(--blanc); cursor:pointer;
-    display:flex; align-items:center; justify-content:center;
-    transition:all 0.15s; flex-shrink:0;
-  }
-  .mini-check:hover { border-color:var(--success); }
-.mini-check.checked { background: var(--bordeaux); border-color: var(--bordeaux); }
-.mini-check.checked::after { content:'✓'; color:white; font-size:0.65rem; font-weight:900; }
-.mini-check.checked-arrivee { background: var(--success); border-color: var(--success); }
-.mini-check.checked-arrivee::after { content:'✓'; color:white; font-size:0.65rem; font-weight:900; }
+
 
   /* ── DRAWER DÉTAIL ── */
   .drawer-overlay {
@@ -1649,14 +1609,7 @@ function updateStats() {
     <div class="stat-chip"><div class="val">${futureR.reduce((s,r)=>s+r.couverts,0)}</div><div class="lbl">Couverts à venir</div></div>`;
 }
 
-const STATUS_CONFIG = {
-  prise:   { label: 'Réservation prise',      icon: '📋', next: 'notee'   },
-  notee:   { label: 'Notée sur le cahier',     icon: '✏️', next: 'arrivee' },
-  arrivee: { label: 'Arrivée',                 icon: '✅', next: 'prise'   },
-};
-
 function buildResaCard(r, newId=null) {
-  const copied = !!r.copied;
   return `
     <div class="resa-card${newId===r.id?' new-flash':''}" id="card-${r.id}">
       <div class="resa-time">${r.heure?r.heure.slice(0,5).replace(':','h'):'—'}</div>
@@ -1669,7 +1622,6 @@ function buildResaCard(r, newId=null) {
         ${r.comment?`<div class="resa-comment">💬 ${escHTML(r.comment)}</div>`:''}
       </div>
       <div class="card-actions">
-        <div class="mini-check${copied?' checked':''}" title="Recopié sur cahier" onclick="toggleCopied(event,${r.id})" style="width:18px;height:18px;border:1.5px solid var(--gris-clair);border-radius:3px;background:var(--blanc);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;flex-shrink:0;"></div>
         <button class="btn-print" onclick="event.stopPropagation();imprimerParId(${r.id})">🖨️</button>
         <button class="btn-edit" onclick="openEdit(${r.id})">✏️ Modifier</button>
         <button class="btn-del" onclick="deleteResa(${r.id},'${escHTML(r.nom)}')">✕</button>
@@ -1717,13 +1669,10 @@ function renderViewWeek(newId=null) {
     const dayResas=allResas.filter(r=>r.date===ds).sort((a,b)=>(a.heure||'99').localeCompare(b.heure||'99'));
     const totC=dayResas.reduce((s,r)=>s+r.couverts,0), isEmpty=!dayResas.length;
     const cards=dayResas.map(r=>{
-      const copied=!!r.copied;
-      const checkClass = r.status === 'arrivee' ? 'checked-arrivee' : (r.status === 'notee' ? 'checked' : '');
       const h=r.heure?r.heure.slice(0,5).replace(':','h'):null;
-      return `<div class="mc-mini-resa${copied?' copied':''}${newId===r.id?' new-flash':''}" id="mini-${r.id}" onclick="openDrawer(${r.id})" style="position:relative;">
+      return `<div class="mc-mini-resa${newId===r.id?' new-flash':''}" id="mini-${r.id}" onclick="openDrawer(${r.id})">
         <div class="mc-mini-resa-nom">${escHTML(r.nom)}</div>
         <div class="mc-mini-resa-couverts">&#128101; ${r.couverts} couvert${r.couverts>1?'s':''}${h?' &middot; '+h:''}</div>
-       <div class="mini-check${checkClass ? ' '+checkClass : ''}" title="Recopié sur cahier" onclick="toggleCopied(event,${r.id})"></div>
       </div>`;
     }).join('');
     return `<div class="cal-day${isToday?' today':''}${isEmpty?' empty-day':''}">
@@ -1765,7 +1714,7 @@ const JOURS = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
     const cls=['month-cell',hasResa?'has-resa':'',isToday?'is-today':''].filter(Boolean).join(' ');
     const miniCards=sorted.map(r=>{
       const h=r.heure?r.heure.slice(0,5).replace(':','h'):null;
-      return `<div class="mc-mini-resa${r.copied?' copied':''}" onclick="event.stopPropagation();openDrawer(${r.id})" title="${escHTML(r.nom)} · ${r.couverts} couverts">
+      return `<div class="mc-mini-resa" onclick="event.stopPropagation();openDrawer(${r.id})" title="${escHTML(r.nom)} · ${r.couverts} couverts">
         <div class="mc-mini-resa-nom">${escHTML(r.nom)}</div>
         <div class="mc-mini-resa-couverts">&#128101; ${r.couverts} couvert${r.couverts>1?'s':''}${h?' &middot; '+h:''}</div>
       </div>`;
@@ -1812,47 +1761,7 @@ function getWeekNumber(d) {
 }
 
 
-async function toggleCopied(e, id) {
-  e.stopPropagation();
-  const r = allResas.find(x => x.id === id);
-  if (!r) return;
-  const newCopied = !r.copied;
-  const newStatus = newCopied ? 'notee' : 'prise';
-  // Mise à jour optimiste
-  r.copied = newCopied;
-  r.status = newStatus;
-  renderAgenda();
-  try {
-    await apiUpdate(id, { copied: newCopied, status: newStatus });
-  } catch(err) {
-    r.copied = !newCopied;
-    r.status = newCopied ? 'prise' : 'notee';
-    renderAgenda();
-    showToast('Erreur lors de la mise à jour.', 'error');
-  }
-}
 
-// ── STATUT RADIO ─────────────────────────────────────────
-async function setStatus(e, id, newStatus) {
-  e.stopPropagation();
-  const r = allResas.find(x => x.id === id);
-  if (!r || r.status === newStatus) return;
-  const prev = r.status;
-  const prevCopied = r.copied;
-  r.status = newStatus;
-  r.copied = newStatus === 'notee' || newStatus === 'arrivee';
-  renderAgenda();
-  try {
-    await apiUpdate(id, { status: newStatus, copied: r.copied });
-    const labels = { prise:'📋 Réservation prise', notee:'✏️ Notée sur le cahier', arrivee:'✅ Arrivée' };
-    showToast(`${labels[newStatus]} — ${r.nom}`, 'success');
-  } catch(err) {
-    r.status = prev;
-    r.copied = prevCopied;
-    renderAgenda();
-    showToast('Erreur mise à jour statut.', 'error');
-  }
-}
 // ── DRAWER DÉTAIL ─────────────────────────────────────────
 let drawerResaId = null;
 
@@ -2032,7 +1941,6 @@ function imprimerParId(id) {
 }
 
 function buildResaCard(r, newId=null) {
-  const status = r.status || 'prise';
   return `
     <div class="resa-card${newId===r.id?' new-flash':''}" id="card-${r.id}">
       <div class="resa-time">${r.heure ? r.heure.slice(0,5).replace(':','h') : '—'}</div>
@@ -2043,11 +1951,6 @@ function buildResaCard(r, newId=null) {
           ${r.tel ? `<span>📞 ${escHTML(r.tel)}</span>` : ''}
         </div>
         ${r.comment ? `<div class="resa-comment">💬 ${escHTML(r.comment)}</div>` : ''}
-      </div>
-      <div class="status-steps">
-        <div class="status-step${status==='prise'   ? ' active-prise'   : ''}" onclick="setStatus(event,${r.id},'prise')">📋 Prise</div>
-        <div class="status-step${status==='notee'   ? ' active-notee'   : ''}" onclick="setStatus(event,${r.id},'notee')">✏️ Cahier</div>
-        <div class="status-step${status==='arrivee' ? ' active-arrivee' : ''}" onclick="setStatus(event,${r.id},'arrivee')">✅ Arrivée</div>
       </div>
       <div class="card-actions">
         <button class="btn-print" onclick="event.stopPropagation();imprimerParId(${r.id})">🖨️</button>
