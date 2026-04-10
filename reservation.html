@@ -128,6 +128,60 @@
   .toast.show { transform:translateX(-50%) translateY(0); }
   .toast.ok { border-left-color:#4caf8b; }
   .toast.ko { border-left-color:var(--error); }
+
+  /* ── CALENDRIER CUSTOM ── */
+  .cal-wrap { position:relative; }
+  .cal-display {
+    width:100%; padding:12px 14px; border:1.5px solid var(--gris-clair); border-radius:7px;
+    font-family:'Lato',sans-serif; font-size:0.95rem; color:var(--noir);
+    background:var(--creme); cursor:pointer; text-align:left;
+    display:flex; align-items:center; justify-content:space-between;
+    transition:border-color 0.2s, box-shadow 0.2s; outline:none;
+    -webkit-appearance:none; appearance:none;
+  }
+  .cal-display:focus, .cal-display.open { border-color:var(--bordeaux); box-shadow:0 0 0 3px rgba(107,26,42,0.08); background:var(--blanc); }
+  .cal-display.inv { border-color:var(--error); }
+  .cal-display-icon { font-size:0.9rem; opacity:0.5; }
+  .cal-popover {
+    position:absolute; top:calc(100% + 6px); left:0; z-index:50;
+    background:var(--blanc); border-radius:12px;
+    box-shadow:0 12px 40px rgba(107,26,42,0.18), 0 2px 8px rgba(0,0,0,0.08);
+    border:1.5px solid var(--gris-clair);
+    padding:16px; width:296px;
+    display:none; animation:calIn 0.18s ease;
+  }
+  @media(max-width:400px){ .cal-popover { width:calc(100vw - 32px); } }
+  @keyframes calIn { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+  .cal-popover.open { display:block; }
+  .cal-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  .cal-nav-btn {
+    background:none; border:1.5px solid var(--gris-clair); border-radius:6px;
+    width:30px; height:30px; cursor:pointer; font-size:1rem; color:var(--bordeaux);
+    display:flex; align-items:center; justify-content:center;
+    transition:all 0.15s; font-weight:700; line-height:1;
+  }
+  .cal-nav-btn:hover { background:var(--bordeaux); color:var(--blanc); border-color:var(--bordeaux); }
+  .cal-month-label { font-family:'Playfair Display',serif; font-size:0.95rem; color:var(--bordeaux); font-weight:700; text-align:center; flex:1; }
+  .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+  .cal-dh { text-align:center; font-size:0.62rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--gris); padding:4px 0 6px; }
+  .cal-dh.samedi { color:#ccc; }
+  .cal-day {
+    aspect-ratio:1; border-radius:6px; border:none; background:none;
+    font-family:'Lato',sans-serif; font-size:0.82rem; font-weight:700;
+    cursor:pointer; transition:all 0.12s; color:var(--noir);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .cal-day:hover:not(:disabled):not(.empty) { background:rgba(107,26,42,0.1); color:var(--bordeaux); }
+  .cal-day.today { border:1.5px solid var(--bordeaux); color:var(--bordeaux); }
+  .cal-day.selected { background:var(--bordeaux) !important; color:var(--blanc) !important; box-shadow:0 2px 8px rgba(107,26,42,0.35); }
+  .cal-day:disabled {
+    color:#ccc; cursor:not-allowed;
+  }
+  .cal-day.samedi-day:disabled {
+    background:repeating-linear-gradient(135deg, transparent, transparent 4px, rgba(0,0,0,0.05) 4px, rgba(0,0,0,0.05) 5px);
+    color:#ddd;
+  }
+  .cal-day.empty { cursor:default; visibility:hidden; }
 </style>
 </head>
 <body>
@@ -158,8 +212,22 @@
           <span class="ferr" id="e-nom">Veuillez saisir votre nom.</span>
         </div>
         <div class="fg">
-          <label for="date">Date <span class="req">*</span></label>
-          <input type="date" id="date">
+          <label>Date <span class="req">*</span></label>
+          <div class="cal-wrap">
+            <button type="button" class="cal-display" id="cal-display" onclick="toggleCal()">
+              <span id="cal-display-txt">Choisir une date</span>
+              <span class="cal-display-icon">📅</span>
+            </button>
+            <div class="cal-popover" id="cal-popover">
+              <div class="cal-nav">
+                <button type="button" class="cal-nav-btn" onclick="calChangeMonth(-1)">‹</button>
+                <div class="cal-month-label" id="cal-month-label">—</div>
+                <button type="button" class="cal-nav-btn" onclick="calChangeMonth(1)">›</button>
+              </div>
+              <div class="cal-grid" id="cal-grid"></div>
+            </div>
+          </div>
+          <input type="hidden" id="date">
           <span class="ferr" id="e-date">Veuillez choisir une date.</span>
         </div>
         <div class="fg">
@@ -255,10 +323,89 @@ const $ = id => document.getElementById(id);
       o.value=v; o.textContent=v.replace(':','h'); sel.appendChild(o);
     }
   }
-  const today = new Date().toISOString().split('T')[0];
-  $('date').min = today;
-  $('date').value = today;
 })();
+
+// ── CALENDRIER CUSTOM ─────────────────────────────────────
+const CAL_MOIS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+const CAL_JOURS_LONG = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+const CAL_MOIS_LONG  = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+let calYear, calMonth, calSelected = null;
+
+function toDateStr(d) { return d.toISOString().split('T')[0]; }
+
+function initCal() {
+  const today = new Date();
+  calYear  = today.getFullYear();
+  calMonth = today.getMonth();
+  // Valeur par défaut = aujourd'hui, ou dimanche si aujourd'hui est samedi
+  const d = new Date(today);
+  if (d.getDay() === 6) d.setDate(d.getDate() + 1);
+  calSelectDate(toDateStr(d), false);
+  renderCal();
+}
+
+function toggleCal() {
+  const pop = $('cal-popover'), btn = $('cal-display');
+  const isOpen = pop.classList.contains('open');
+  if (isOpen) { pop.classList.remove('open'); btn.classList.remove('open'); }
+  else { renderCal(); pop.classList.add('open'); btn.classList.add('open'); }
+}
+
+function calChangeMonth(dir) {
+  calMonth += dir;
+  if (calMonth < 0)  { calMonth = 11; calYear--; }
+  if (calMonth > 11) { calMonth = 0;  calYear++; }
+  renderCal();
+}
+
+function renderCal() {
+  $('cal-month-label').textContent = CAL_MOIS[calMonth] + ' ' + calYear;
+  const todayStr = toDateStr(new Date());
+  const firstDow = new Date(calYear, calMonth, 1).getDay();
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  let html = '';
+  ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'].forEach((h,i) => {
+    html += `<div class="cal-dh${i===6?' samedi':''}">${h}</div>`;
+  });
+  for (let i=0; i<firstDow; i++) html += `<button class="cal-day empty" disabled></button>`;
+  for (let d=1; d<=daysInMonth; d++) {
+    const ds = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dow = new Date(ds+'T12:00:00').getDay();
+    const isSat  = dow === 6;
+    const isPast = ds < todayStr;
+    const isSel  = ds === calSelected;
+    const isToday = ds === todayStr;
+    let cls = 'cal-day';
+    if (isSat)   cls += ' samedi-day';
+    if (isSel)   cls += ' selected';
+    else if (isToday && !isSat && !isPast) cls += ' today';
+    const disabled = isSat || isPast;
+    html += `<button type="button" class="${cls}" ${disabled?'disabled':''} ${(!disabled)?`onclick="calSelectDate('${ds}')"`:''}>${d}</button>`;
+  }
+  $('cal-grid').innerHTML = html;
+}
+
+function calSelectDate(ds, close=true) {
+  calSelected = ds;
+  $('date').value = ds;
+  const d = new Date(ds+'T12:00:00');
+  $('cal-display-txt').textContent = `${CAL_JOURS_LONG[d.getDay()]} ${d.getDate()} ${CAL_MOIS_LONG[d.getMonth()]} ${d.getFullYear()}`;
+  $('cal-display').classList.remove('inv');
+  $('e-date').classList.remove('v');
+  calYear = d.getFullYear(); calMonth = d.getMonth();
+  if (close) { $('cal-popover').classList.remove('open'); $('cal-display').classList.remove('open'); }
+}
+
+// Fermer si clic en dehors
+initCal();
+
+document.addEventListener('click', e => {
+  const wrap = document.querySelector('.cal-wrap');
+  if (wrap && !wrap.contains(e.target)) {
+    $('cal-popover').classList.remove('open');
+    $('cal-display').classList.remove('open');
+  }
+});
 
 function showToast(msg, type='ok') {
   const t=$('toast'); t.textContent=msg; t.className='toast '+type;
@@ -323,7 +470,7 @@ async function soumettre() {
 function nouvelleSaisie() {
   $('nom').value=''; $('couverts').value=''; $('heure').value='';
   $('tel').value=''; $('comment').value='';
-  $('date').value=new Date().toISOString().split('T')[0];
+  initCal();
   $('form-wrap').style.display='block';
   $('success-wrap').style.display='none';
   $('btn-resa').disabled=false;
