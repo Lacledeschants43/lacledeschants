@@ -132,24 +132,25 @@
   /* ── BANNIÈRE FERMETURE ── */
   .ferm-banner {
     display:none;
-    background:linear-gradient(135deg,#4A0F1C,#6B1A2A);
-    color:#fff; padding:18px 52px 18px 24px; text-align:center;
-    border-bottom:4px solid var(--or); position:relative;
-    box-shadow:0 4px 20px rgba(74,15,28,0.35);
+    background:#C9A84C;
+    color:#2a0a12; padding:16px 52px 16px 24px; text-align:center;
+    border-top:4px solid #4A0F1C; border-bottom:4px solid #4A0F1C;
+    position:relative;
+    box-shadow:0 4px 16px rgba(0,0,0,0.25);
   }
   .ferm-banner.visible { display:block; }
   .ferm-banner-inner { max-width:600px; margin:0 auto; display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap; }
   .ferm-banner-icon { font-size:1.5rem; flex-shrink:0; }
-  .ferm-banner-text strong { font-family:'Playfair Display',serif; font-size:1.05rem; display:block; margin-bottom:3px; color:#E8C96A; }
-  .ferm-banner-text { font-size:0.88rem; line-height:1.6; }
+  .ferm-banner-text strong { font-family:'Playfair Display',serif; font-size:1.05rem; display:block; margin-bottom:3px; color:#2a0a12; }
+  .ferm-banner-text { font-size:0.88rem; line-height:1.6; color:#2a0a12; }
   .ferm-banner-close {
     position:absolute; right:16px; top:50%; transform:translateY(-50%);
-    background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); border-radius:50%;
-    color:#fff; font-size:1rem; width:28px; height:28px;
+    background:rgba(0,0,0,0.15); border:1px solid rgba(0,0,0,0.2); border-radius:50%;
+    color:#2a0a12; font-size:1rem; width:28px; height:28px;
     cursor:pointer; display:flex; align-items:center; justify-content:center;
     transition:background .2s; line-height:1;
   }
-  .ferm-banner-close:hover { background:rgba(255,255,255,0.3); }
+  .ferm-banner-close:hover { background:rgba(0,0,0,0.25); }
 
   /* ── POPUP FERMETURE ── */
   .ferm-popup-overlay {
