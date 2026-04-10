@@ -537,6 +537,44 @@ function showToast(msg, type='ok') {
 const JOURS = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
 const MOIS  = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
 
+// ── ENVOI MAIL BREVO ─────────────────────────────────────
+const BREVO_KEY = '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';
+
+async function envoyerMailBrevo(resa, dateStr) {
+  try {
+    await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: { 'api-key': BREVO_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sender:  { name: 'La Clé des Chants', email: 'lacledeschants43@gmail.com' },
+        to:      [{ email: 'lacledeschants43@gmail.com', name: 'La Clé des Chants' }],
+        subject: `🍽️ Nouvelle réservation — ${resa.nom}`,
+        htmlContent: `
+          <div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;border:1px solid #e8e0d8;border-radius:10px;overflow:hidden;">
+            <div style="background:#6B1A2A;padding:24px;text-align:center;">
+              <img src="https://raw.githubusercontent.com/lacledeschants43/lacledeschants/main/logo.png" style="width:70px;height:70px;border-radius:50%;margin-bottom:10px;">
+              <h2 style="color:#C9A84C;font-family:Georgia,serif;margin:0;">Nouvelle réservation</h2>
+              <p style="color:rgba(255,255,255,0.8);margin:6px 0 0;font-size:14px;">La Clé des Chants</p>
+            </div>
+            <div style="padding:24px;background:#FAF7F4;">
+              <table style="width:100%;border-collapse:collapse;">
+                <tr><td style="padding:10px 0;border-bottom:1px solid #e8e0d8;color:#6b6b6b;font-size:13px;width:40%;">👤 Nom</td><td style="padding:10px 0;border-bottom:1px solid #e8e0d8;font-weight:700;color:#1a1a1a;">${resa.nom}</td></tr>
+                <tr><td style="padding:10px 0;border-bottom:1px solid #e8e0d8;color:#6b6b6b;font-size:13px;">📅 Date</td><td style="padding:10px 0;border-bottom:1px solid #e8e0d8;font-weight:700;color:#1a1a1a;">${dateStr}</td></tr>
+                <tr><td style="padding:10px 0;border-bottom:1px solid #e8e0d8;color:#6b6b6b;font-size:13px;">🕐 Heure</td><td style="padding:10px 0;border-bottom:1px solid #e8e0d8;font-weight:700;color:#1a1a1a;">${resa.heure ? resa.heure.replace(':','h') : 'Sans préférence'}</td></tr>
+                <tr><td style="padding:10px 0;border-bottom:1px solid #e8e0d8;color:#6b6b6b;font-size:13px;">👥 Personnes</td><td style="padding:10px 0;border-bottom:1px solid #e8e0d8;font-weight:700;color:#1a1a1a;">${resa.couverts}</td></tr>
+                <tr><td style="padding:10px 0;border-bottom:1px solid #e8e0d8;color:#6b6b6b;font-size:13px;">📞 Téléphone</td><td style="padding:10px 0;border-bottom:1px solid #e8e0d8;font-weight:700;color:#1a1a1a;">${resa.tel || '—'}</td></tr>
+                ${resa.comment ? `<tr><td style="padding:10px 0;color:#6b6b6b;font-size:13px;">💬 Message</td><td style="padding:10px 0;font-style:italic;color:#1a1a1a;">${resa.comment}</td></tr>` : ''}
+              </table>
+            </div>
+            <div style="padding:14px 24px;background:#6B1A2A;text-align:center;">
+              <p style="color:rgba(255,255,255,0.6);font-size:12px;margin:0;">La Clé des Chants · 16 La Pénide · 43160 La Chaise-Dieu</p>
+            </div>
+          </div>`
+      })
+    });
+  } catch(e) { console.warn('Mail non envoyé :', e); }
+}
+
 async function soumettre() {
   let ok = true;
   [{id:'nom',err:'e-nom',t:v=>v.trim().length>=2},
@@ -567,9 +605,12 @@ async function soumettre() {
     const r = await fetch(API_URL, {method:'POST', headers:HEADERS, body:JSON.stringify(resa)});
     if (!r.ok) throw new Error('Erreur serveur');
 
-    // Affiche le récap
+    // Envoi mail
     const d = new Date(resa.date+'T12:00:00');
     const dateStr = `${JOURS[d.getDay()]} ${d.getDate()} ${MOIS[d.getMonth()]} ${d.getFullYear()}`;
+    envoyerMailBrevo(resa, dateStr);
+
+    // Affiche le récap
     $('success-recap').innerHTML = `
       <div class="success-recap-row"><span class="success-recap-label">Nom</span><span class="success-recap-val">${resa.nom}</span></div>
       <div class="success-recap-row"><span class="success-recap-label">Date</span><span class="success-recap-val">${dateStr}</span></div>
