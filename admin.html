@@ -1057,12 +1057,25 @@
     <!-- ── FERMETURES EXCEPTIONNELLES ── -->
     <div class="site-section-title">🔒 Jours fermés</div>
     <p style="font-size:0.82rem;color:var(--gris);margin-bottom:16px;line-height:1.6;">
-      Ajoutez ici les jours de fermeture exceptionnelle ou de congés. Ces dates seront automatiquement grisées et non réservables sur la page client.
+      Ajoutez un jour isolé ou une période de fermeture (congés, férié…). Ces dates seront automatiquement grisées et non réservables sur la page client.
     </p>
+
+    <!-- Sélecteur type -->
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
+      <button class="btn-qf active" id="ferm-type-jour" onclick="setFermType('jour')">📅 Jour isolé</button>
+      <button class="btn-qf" id="ferm-type-periode" onclick="setFermType('periode')">📆 Période</button>
+    </div>
+
     <div class="ferm-add-bar">
-      <div class="site-field">
-        <label>Date de fermeture</label>
+      <!-- Jour isolé -->
+      <div class="site-field" id="ferm-field-debut">
+        <label id="ferm-label-debut">Date de fermeture</label>
         <input type="date" id="ferm-date">
+      </div>
+      <!-- Date fin (période seulement) -->
+      <div class="site-field" id="ferm-field-fin" style="display:none">
+        <label>Date de fin</label>
+        <input type="date" id="ferm-date-fin">
       </div>
       <div class="site-field" style="flex:2">
         <label>Motif (optionnel)</label>
@@ -2438,7 +2451,15 @@ async function loadFermetures() {
     const r = await fetch(FERM_URL + '?order=date.asc', { headers: HEADERS });
     if (!r.ok) throw new Error();
     fermetures = await r.json();
-    joursFermesAdmin = new Set(fermetures.map(f => f.date));
+    // Reconstruit le Set en expandant les périodes
+    joursFermesAdmin = new Set();
+    fermetures.forEach(f => {
+      const debut = new Date(f.date + 'T12:00:00');
+      const fin   = f.date_fin ? new Date(f.date_fin + 'T12:00:00') : debut;
+      for (let d = new Date(debut); d <= fin; d.setDate(d.getDate() + 1)) {
+        joursFermesAdmin.add(d.toISOString().split('T')[0]);
+      }
+    });
     renderFermetures();
   } catch(e) {
     const el = $('ferm-list');
@@ -2449,6 +2470,11 @@ async function loadFermetures() {
 const JOURS_FERM  = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
 const MOIS_FERM   = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
 
+function formatDateFerm(ds) {
+  const d = new Date(ds + 'T12:00:00');
+  return `${JOURS_FERM[d.getDay()]} ${d.getDate()} ${MOIS_FERM[d.getMonth()]} ${d.getFullYear()}`;
+}
+
 function renderFermetures() {
   const list = $('ferm-list');
   if (!list) return;
@@ -2457,35 +2483,61 @@ function renderFermetures() {
     return;
   }
   list.innerHTML = fermetures.map(f => {
-    const d = new Date(f.date + 'T12:00:00');
-    const label = `${JOURS_FERM[d.getDay()]} ${d.getDate()} ${MOIS_FERM[d.getMonth()]} ${d.getFullYear()}`;
+    const isPeriode = f.date_fin && f.date_fin !== f.date;
+    const labelDebut = formatDateFerm(f.date);
+    const labelFin   = f.date_fin ? formatDateFerm(f.date_fin) : null;
+    const label = isPeriode
+      ? `Du ${labelDebut} au ${labelFin}`
+      : labelDebut;
+    const icon = isPeriode ? '📆' : '🔒';
+    // Calcul nb jours pour période
+    let nbJours = '';
+    if (isPeriode) {
+      const d1 = new Date(f.date + 'T12:00:00');
+      const d2 = new Date(f.date_fin + 'T12:00:00');
+      const diff = Math.round((d2 - d1) / 86400000) + 1;
+      nbJours = `<span style="font-size:0.75rem;color:var(--gris);margin-left:8px;">${diff} jour${diff>1?'s':''}</span>`;
+    }
     return `<div class="ferm-item">
       <div class="ferm-item-left">
-        <span style="font-size:1.2rem">🔒</span>
+        <span style="font-size:1.2rem">${icon}</span>
         <div>
-          <div class="ferm-item-date">${label}</div>
+          <div class="ferm-item-date">${label}${nbJours}</div>
           ${f.motif ? `<div class="ferm-item-motif">${escHTML(f.motif)}</div>` : ''}
         </div>
       </div>
-      <button class="btn-ferm-del" onclick="supprimerFermeture(${f.id}, '${label}')">✕ Supprimer</button>
+      <button class="btn-ferm-del" onclick="supprimerFermeture(${f.id}, \`${label.replace(/`/g,"'")}\`)">✕ Supprimer</button>
     </div>`;
   }).join('');
 }
 
+let fermType = 'jour';
+function setFermType(type) {
+  fermType = type;
+  $('ferm-type-jour').classList.toggle('active', type === 'jour');
+  $('ferm-type-periode').classList.toggle('active', type === 'periode');
+  $('ferm-field-fin').style.display = type === 'periode' ? '' : 'none';
+  $('ferm-label-debut').textContent = type === 'periode' ? 'Date de début' : 'Date de fermeture';
+}
+
 async function ajouterFermeture() {
-  const date  = $('ferm-date').value;
-  const motif = $('ferm-motif').value.trim();
-  if (!date) { showToast('Veuillez choisir une date.', 'error'); return; }
-  if (joursFermesAdmin.has(date)) { showToast('Cette date est déjà fermée.', 'error'); return; }
+  const date     = $('ferm-date').value;
+  const date_fin = fermType === 'periode' ? $('ferm-date-fin').value : null;
+  const motif    = $('ferm-motif').value.trim();
+
+  if (!date) { showToast('Veuillez choisir une date de début.', 'error'); return; }
+  if (fermType === 'periode' && !date_fin) { showToast('Veuillez choisir une date de fin.', 'error'); return; }
+  if (fermType === 'periode' && date_fin < date) { showToast('La date de fin doit être après la date de début.', 'error'); return; }
+
   try {
-    const r = await fetch(FERM_URL, {
-      method: 'POST', headers: HEADERS,
-      body: JSON.stringify({ date, motif: motif || null })
-    });
+    const body = { date, motif: motif || null };
+    if (date_fin) body.date_fin = date_fin;
+    const r = await fetch(FERM_URL, { method: 'POST', headers: HEADERS, body: JSON.stringify(body) });
     if (!r.ok) throw new Error();
     $('ferm-date').value = '';
+    if ($('ferm-date-fin')) $('ferm-date-fin').value = '';
     $('ferm-motif').value = '';
-    showToast('✓ Jour fermé ajouté !', 'success');
+    showToast('✓ Fermeture ajoutée !', 'success');
     await loadFermetures();
   } catch(e) {
     showToast('Erreur lors de l\'ajout.', 'error');
@@ -2493,7 +2545,7 @@ async function ajouterFermeture() {
 }
 
 async function supprimerFermeture(id, label) {
-  if (!confirm(`Supprimer la fermeture du ${label} ?`)) return;
+  if (!confirm(`Supprimer la fermeture "${label}" ?`)) return;
   try {
     const r = await fetch(FERM_URL + '?id=eq.' + id, { method: 'DELETE', headers: HEADERS });
     if (!r.ok) throw new Error();

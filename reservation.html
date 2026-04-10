@@ -335,10 +335,17 @@ let joursFermes = new Set(); // ensemble de dates 'YYYY-MM-DD'
 
 async function loadFermetures() {
   try {
-    const r = await fetch(FERM_URL + '?select=date', { headers: HEADERS });
+    const r = await fetch(FERM_URL + '?select=date,date_fin', { headers: HEADERS });
     if (r.ok) {
       const data = await r.json();
-      joursFermes = new Set(data.map(f => f.date));
+      joursFermes = new Set();
+      data.forEach(f => {
+        const debut = new Date(f.date + 'T12:00:00');
+        const fin   = f.date_fin ? new Date(f.date_fin + 'T12:00:00') : debut;
+        for (let d = new Date(debut); d <= fin; d.setDate(d.getDate() + 1)) {
+          joursFermes.add(d.toISOString().split('T')[0]);
+        }
+      });
     }
   } catch(e) {}
 }
