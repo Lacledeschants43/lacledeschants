@@ -2317,7 +2317,7 @@ async function loadAssignments(dateStr) {
   assignments = {};
   if (!dateStr) return;
   const resas = allResas.filter(r => r.date === dateStr && r.table_id);
-  resas.forEach(r => { assignments[r.table_id] = r.id; });
+  resas.forEach(r => { assignments[Number(r.table_id)] = r.id; });
 }
 
 // Mode
@@ -2339,11 +2339,11 @@ function setMode(mode) {
   renderSalle();
 }
 
-async function renderSalle() {
+async function renderSalle(skipLoadAssignments = false) {
   const canvas = $('salle-canvas');
   const layer  = $('salle-layer');
   const dateStr = $('salle-date').value;
-  if (salleMode === 'service' && dateStr) await loadAssignments(dateStr);
+  if (!skipLoadAssignments && salleMode === 'service' && dateStr) await loadAssignments(dateStr);
 
   // Retire les tables existantes (garde le panel)
   layer.querySelectorAll('.table-sq').forEach(el => el.remove());
@@ -2358,8 +2358,8 @@ async function renderSalle() {
     if (selectedTableId === t.id) el.classList.add('selected');
 
     // Occupation
-    const assignedResaId = Object.keys(assignments).find(tid => +tid === t.id);
-    const resa = assignedResaId ? allResas.find(r => r.id === assignments[+assignedResaId]) : null;
+    const assignedResaId = assignments[Number(t.id)];
+    const resa = assignedResaId ? allResas.find(r => r.id === assignedResaId) : null;
     el.classList.add(resa ? 'occupee' : 'libre');
 
     el.innerHTML = `
@@ -2702,12 +2702,12 @@ async function autoAssigner() {
     for (const { resaId, tableId } of nouvelles) {
       if (tableId > 2147483647) { showToast('ID de table invalide — recréez les tables depuis le mode Édition.', 'error'); break; }
       await apiUpdate(resaId, { table_id: tableId });
-      assignments[tableId] = resaId;
+      assignments[Number(tableId)] = resaId;
       const r = allResas.find(x => x.id === resaId);
-      if (r) r.table_id = tableId;
+      if (r) r.table_id = Number(tableId);
     }
     closeTablePanel();
-    await renderSalle();
+    await renderSalle(true); // ne pas écraser assignments qu'on vient de remplir
     showToast(`✓ ${nouvelles.length} réservation${nouvelles.length > 1 ? 's assignées' : ' assignée'} !`, 'success');
   } catch(e) {
     showToast('Erreur lors de l\'auto-assignation.', 'error');
