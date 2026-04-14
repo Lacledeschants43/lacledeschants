@@ -1119,9 +1119,19 @@ const HEADERS = {
 };
 const POLL_INTERVAL = 5000; // vérification toutes les 5 secondes
 
+// ── NORMALISATION TÉLÉPHONE ──────────────────────────────
+// +33612345678 / 0033612345678 / 06 12 34 56 78 → 0612345678
+function normaliserTel(tel) {
+  if (!tel) return '';
+  let t = tel.replace(/[\s.\-()\u00a0]/g, '');
+  if (t.startsWith('+33')) t = '0' + t.slice(3);
+  else if (t.startsWith('0033')) t = '0' + t.slice(4);
+  return t;
+}
+
 // ── AUTOCOMPLETE TÉLÉPHONE ───────────────────────────────
 function autocompletePhone() {
-  const q = $('f-phone').value.replace(/\s/g, '');
+  const q = normaliserTel($('f-phone').value);
   const list = $('autocomplete-list-phone');
   if (q.length < 3) { fermerAutocompletePhone(); return; }
 
@@ -1129,7 +1139,7 @@ function autocompletePhone() {
   const clients = [];
   allResas.forEach(r => {
     if (!r.tel) return;
-    const telNorm = r.tel.replace(/\s/g, '');
+    const telNorm = normaliserTel(r.tel);
     const key = normaliserNom(r.nom);
     if (!seen.has(key) && telNorm.includes(q)) {
       seen.add(key);
