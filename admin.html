@@ -2526,7 +2526,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ── ÉDITION TABLE ─────────────────────────────────────────
 function ajouterTable() {
-  const newId = Date.now();
+  // Utilise un petit entier (max existant + 1) compatible avec integer PostgreSQL
+  const newId = tables.length ? Math.max(...tables.map(t => t.id)) + 1 : 1;
   const num = 'T' + (tables.length + 1);
   tables.push({ id: newId, num, cap: 4, type: 'interieur', forme: 'carre', x: 40, y: 40 });
   savePlanLocal();
@@ -2699,6 +2700,7 @@ async function autoAssigner() {
 
   try {
     for (const { resaId, tableId } of nouvelles) {
+      if (tableId > 2147483647) { showToast('ID de table invalide — recréez les tables depuis le mode Édition.', 'error'); break; }
       await apiUpdate(resaId, { table_id: tableId });
       assignments[tableId] = resaId;
       const r = allResas.find(x => x.id === resaId);
