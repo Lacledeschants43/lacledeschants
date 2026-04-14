@@ -2797,7 +2797,7 @@ function renderRowsAA() {
     const placement = resa ? (resa.placement || 'interieur') : 'interieur';
     const placementLabel = placement === 'terrasse' ? '☀️' : '🏠';
 
-    // Options : toutes les tables, la table actuelle en premier
+    // Options générées sans couleur ici — colorées après par colorierOptionsAA()
     const opts = tables.map(t => {
       const typeIcon = t.type === 'terrasse' ? '☀️' : '🏠';
       return '<option value="' + t.id + '"' + (t.id === n.tableId ? ' selected' : '') + '>' +
@@ -2820,12 +2820,38 @@ function renderRowsAA() {
   }).join('');
 
   verifierDoublonsAA();
+  colorierOptionsAA();
+}
+
+function colorierOptionsAA() {
+  // Tables déjà assignées en base (hors modal)
+  const dejaPrisesEnBase = new Set(Object.keys(assignments).map(Number));
+  // Tables utilisées dans le modal en cours
+  const prisesModal = new Set(_aaNouvelles.map(n => Number(n.tableId)));
+
+  _aaNouvelles.forEach((n, idx) => {
+    const sel = $('aa-sel-' + idx);
+    if (!sel) return;
+    Array.from(sel.options).forEach(opt => {
+      const tid = Number(opt.value);
+      const prisEnBase  = dejaPrisesEnBase.has(tid);
+      const prisModal   = prisesModal.has(tid) && tid !== Number(n.tableId); // pris par une AUTRE ligne
+      if (prisEnBase || prisModal) {
+        opt.style.background = '#fdecea'; // rouge clair — occupée
+        opt.style.color      = '#c0392b';
+      } else {
+        opt.style.background = '#e8f5ee'; // vert clair — libre
+        opt.style.color      = '#2d7a4f';
+      }
+    });
+  });
 }
 
 function onChangeTableAA(idx) {
   const newTableId = +$('aa-sel-' + idx).value;
   _aaNouvelles[idx].tableId = newTableId;
   verifierDoublonsAA();
+  colorierOptionsAA();
 }
 
 function verifierDoublonsAA() {
