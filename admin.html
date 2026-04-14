@@ -272,13 +272,13 @@
   /* Tables */
   .table-sq {
     position:absolute;
-    width:90px; height:90px;
+    width:64px; height:64px;
     background:var(--blanc);
     border:2px solid var(--bordeaux);
-    border-radius:8px;
+    border-radius:6px;
     display:flex; flex-direction:column;
     align-items:center; justify-content:center;
-    gap:2px; padding:4px;
+    gap:1px; padding:3px;
     box-shadow:0 2px 8px rgba(107,26,42,0.1);
     cursor:grab; user-select:none;
     transition:box-shadow 0.15s, border-color 0.15s;
@@ -291,22 +291,22 @@
   .table-sq.occupee { border-color:#c0392b; background:#fdecea; }
   .table-sq.selected { border-color:var(--or); box-shadow:0 0 0 3px rgba(201,168,76,0.3); }
   .table-sq.terrace { border-style:dashed; opacity:0.85; }
-  .table-sq.rect-h { width:180px; height:90px; }
-  .table-sq.rect-v { width:90px; height:180px; }
-  .table-sq.rect-h .table-resa-name { max-width:170px; }
-  .table-sq.rect-v .table-resa-name { max-width:82px; }
+  .table-sq.rect-h { width:128px; height:64px; }
+  .table-sq.rect-v { width:64px; height:128px; }
+  .table-sq.rect-h .table-resa-name { max-width:120px; }
+  .table-sq.rect-v .table-resa-name { max-width:58px; }
 
-  .table-num { font-family:'Playfair Display',serif; font-size:1.15rem; font-weight:700; color:var(--bordeaux); line-height:1; }
+  .table-num { font-family:'Playfair Display',serif; font-size:1rem; font-weight:700; color:var(--bordeaux); line-height:1; }
   .table-sq.occupee .table-num { color:#c0392b; }
-  .table-cap { font-size:0.72rem; font-weight:700; color:var(--gris); text-transform:uppercase; letter-spacing:0.04em; }
+  .table-cap { font-size:0.7rem; font-weight:700; color:var(--gris); text-transform:uppercase; letter-spacing:0.04em; }
   .table-resa-name {
-    font-size:0.72rem; font-weight:700; color:#c0392b;
+    font-size:0.65rem; font-weight:700; color:#c0392b;
     text-align:center; width:100%;
     word-break:break-word; white-space:normal;
-    line-height:1.2; padding:0 3px;
+    line-height:1.15; padding:0 2px;
   }
   .table-resa-couverts {
-    font-size:0.68rem; font-weight:700; color:#888;
+    font-size:0.62rem; font-weight:700; color:#888;
     text-align:center;
   }
 
