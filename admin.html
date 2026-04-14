@@ -488,7 +488,6 @@
   /* ── CALENDRIER ── */
   .calendar-grid {
     display:grid; grid-template-columns:repeat(7,1fr); gap:6px;
-    align-items:start;
   }
   @media(max-width:700px) {
     .calendar-grid { grid-template-columns:1fr; gap:8px; }
@@ -1705,11 +1704,11 @@ function renderViewWeek(newId=null) {
   const first=days[0], last=days[6];
   $('week-range').textContent = `${first.getDate()} ${MOIS[first.getMonth()]} — ${last.getDate()} ${MOIS[last.getMonth()]} ${last.getFullYear()}`;
   $('week-label-top').textContent = `Semaine ${getWeekNumber(first)}`;
-  const headers = `<div class="calendar-grid" style="margin-bottom:4px">${days.map((d,i)=>{
+  const headerRow = days.map((d,i)=>{
     const isToday=toDateStr(d)===todayStr;
     return `<div class="cal-day-header${isToday?' today-hdr':''}">${JOURS[i]}<br><small>${d.getDate()} ${MOIS[d.getMonth()]}</small></div>`;
-  }).join('')}</div>`;
-  const cells = `<div class="calendar-grid">${days.map(d=>{
+  }).join('');
+  const cellRow = days.map(d=>{
     const ds=toDateStr(d), isToday=ds===todayStr;
     const dayResas=allResas.filter(r=>r.date===ds).sort((a,b)=>(a.heure||'99').localeCompare(b.heure||'99'));
     const totC=dayResas.reduce((s,r)=>s+r.couverts,0), isEmpty=!dayResas.length;
@@ -1723,13 +1722,13 @@ function renderViewWeek(newId=null) {
     return `<div class="cal-day${isToday?' today':''}${isEmpty?' empty-day':''}">
       <div class="cal-day-num" style="display:flex;align-items:center;justify-content:space-between;">
         <span>${d.getDate()}</span>
-        ${!isEmpty?`<button class="btn-print" style="font-size:0.7rem;padding:2px 6px;" onclick="event.stopPropagation();imprimerJour('${ds}')">🖨️</button>`:''}
+        ${!isEmpty?`<button class="btn-print" style="font-size:0.7rem;padding:2px 6px;" onclick="event.stopPropagation();imprimerJour('${ds}')">&#128424;&#65039;</button>`:''}
       </div>
-      ${!isEmpty?`<div class="cal-day-total">${dayResas.length} résa · <strong>${totC} couvert${totC>1?'s':''}</strong></div>`:''}
+      ${!isEmpty?`<div class="cal-day-total">${dayResas.length} r\u00e9sa · <strong>${totC} couvert${totC>1?'s':''}</strong></div>`:''}
       ${cards}
     </div>`;
-  }).join('')}</div>`;
-  $('agenda-view').innerHTML = headers+cells;
+  }).join('');
+  $('agenda-view').innerHTML = `<div class="calendar-grid" style="align-items:start">${headerRow}${cellRow}</div>`;
   updateStats();
 }
 
