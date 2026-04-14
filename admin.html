@@ -272,17 +272,17 @@
   /* Tables */
   .table-sq {
     position:absolute;
-    width:64px; height:64px;
+    width:90px; height:90px;
     background:var(--blanc);
     border:2px solid var(--bordeaux);
-    border-radius:6px;
+    border-radius:8px;
     display:flex; flex-direction:column;
     align-items:center; justify-content:center;
-    gap:2px;
+    gap:2px; padding:4px;
     box-shadow:0 2px 8px rgba(107,26,42,0.1);
     cursor:grab; user-select:none;
     transition:box-shadow 0.15s, border-color 0.15s;
-    z-index:2;
+    z-index:2; overflow:hidden;
   }
   .table-sq:hover { box-shadow:0 4px 16px rgba(107,26,42,0.2); z-index:3; }
   .table-sq.dragging { opacity:0.75; cursor:grabbing; z-index:10; box-shadow:0 8px 24px rgba(0,0,0,0.18); }
@@ -291,15 +291,24 @@
   .table-sq.occupee { border-color:#c0392b; background:#fdecea; }
   .table-sq.selected { border-color:var(--or); box-shadow:0 0 0 3px rgba(201,168,76,0.3); }
   .table-sq.terrace { border-style:dashed; opacity:0.85; }
-  .table-sq.rect-h { width:128px; height:64px; }
-  .table-sq.rect-v { width:64px; height:128px; }
-  .table-sq.rect-h .table-resa-name { max-width:120px; }
-  .table-sq.rect-v .table-resa-name { max-width:58px; }
+  .table-sq.rect-h { width:180px; height:90px; }
+  .table-sq.rect-v { width:90px; height:180px; }
+  .table-sq.rect-h .table-resa-name { max-width:170px; }
+  .table-sq.rect-v .table-resa-name { max-width:82px; }
 
-  .table-num { font-family:'Playfair Display',serif; font-size:1rem; font-weight:700; color:var(--bordeaux); line-height:1; }
+  .table-num { font-family:'Playfair Display',serif; font-size:1.15rem; font-weight:700; color:var(--bordeaux); line-height:1; }
   .table-sq.occupee .table-num { color:#c0392b; }
-  .table-cap { font-size:0.62rem; font-weight:700; color:var(--gris); text-transform:uppercase; letter-spacing:0.05em; }
-  .table-resa-name { font-size:0.58rem; font-weight:700; color:var(--success); text-align:center; max-width:58px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:0 2px; }
+  .table-cap { font-size:0.72rem; font-weight:700; color:var(--gris); text-transform:uppercase; letter-spacing:0.04em; }
+  .table-resa-name {
+    font-size:0.72rem; font-weight:700; color:#c0392b;
+    text-align:center; width:100%;
+    word-break:break-word; white-space:normal;
+    line-height:1.2; padding:0 3px;
+  }
+  .table-resa-couverts {
+    font-size:0.68rem; font-weight:700; color:#888;
+    text-align:center;
+  }
 
   /* Panneau latéral table sélectionnée */
   .table-panel {
@@ -2450,8 +2459,11 @@ async function renderSalle(skipLoadAssignments = false) {
 
     el.innerHTML = `
       <div class="table-num">${escHTML(t.num)}</div>
-      <div class="table-cap">${t.cap}p</div>
-      ${resa ? `<div class="table-resa-name">${escHTML(resa.nom)}</div>` : ''}
+      ${resa
+        ? `<div class="table-resa-name">${escHTML(resa.nom)}</div>
+           <div class="table-resa-couverts">👥 ${resa.couverts} pers.</div>`
+        : `<div class="table-cap">${t.cap}p</div>`
+      }
     `;
 
     // Drag
