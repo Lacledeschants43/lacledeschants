@@ -925,6 +925,8 @@
       <button class="btn-salle" id="btn-add-table" style="display:none" onclick="ajouterTable()">＋ Table</button>
       <button class="btn-salle" id="btn-save-plan" style="display:none" onclick="savePlan()">💾 Sauvegarder</button>
       <div class="salle-toolbar-sep"></div>
+      <!-- Auto-assignation -->
+      <button class="btn-salle" id="btn-auto-assign" onclick="autoAssigner()" title="Assigner automatiquement les réservations aux tables">⚡ Auto-assigner</button>
       <!-- Impression -->
       <button class="btn-salle" onclick="imprimerPlanSalle()" title="Imprimer le plan de salle">🖨️ Imprimer</button>
       <div class="salle-toolbar-sep"></div>
@@ -2330,6 +2332,7 @@ function setMode(mode) {
   $('btn-add-table').style.display     = mode === 'edit'    ? 'flex'  : 'none';
   $('btn-save-plan').style.display     = mode === 'edit'    ? 'flex'  : 'none';
   $('salle-legende').style.display     = mode === 'service' ? 'flex'  : 'none';
+  $('btn-auto-assign').style.display   = mode === 'service' ? 'flex'  : 'none';
   $('tp-edit-fields').style.display    = mode === 'edit'    ? 'block' : 'none';
   $('tp-service-fields').style.display = mode === 'service' ? 'block' : 'none';
   closeTablePanel();
@@ -2622,6 +2625,95 @@ async function desassignerTable() {
   closeTablePanel();
   renderSalle();
   showToast('Table libérée.', 'error');
+}
+
+// ── AUTO-ASSIGNATION ─────────────────────────────────────
+async function autoAssigner() {
+  const dateStr = $('salle-date').value;
+  if (!dateStr) { showToast('Sélectionnez une date.', 'error'); return; }
+  if (!tables.length) { showToast('Aucune table dans le plan.', 'error'); return; }
+
+  const resas = allResas.filter(r => r.date === dateStr)
+    .sort((a, b) => b.couverts - a.couverts); // plus grands groupes en premier
+
+  if (!resas.length) { showToast('Aucune réservation ce jour.', 'error'); return; }
+
+  // Capacité réelle d'une table
+  function tableCap(t) {
+    if (t.forme === 'rect-h' || t.forme === 'rect-v') return Math.max(t.cap, 4);
+    return t.cap;
+  }
+
+  // Tables déjà occupées (assignées manuellement ou par une précédente auto)
+  const tablesOccupees = new Set(Object.keys(assignments).map(Number));
+
+  // Réservations déjà assignées — on ne les retouche pas
+  const resasDejaAssignees = new Set(Object.values(assignments));
+
+  const nouvelles = []; // { resaId, tableId }
+
+  for (const resa of resas) {
+    if (resasDejaAssignees.has(resa.id)) continue; // déjà placée
+
+    // Cherche la table libre la mieux adaptée (capacité >= couverts, la plus petite possible)
+    const candidates = tables
+      .filter(t => !tablesOccupees.has(t.id) && tableCap(t) >= resa.couverts)
+      .sort((a, b) => tableCap(a) - tableCap(b)); // best-fit : plus petite qui convient
+
+    if (candidates.length) {
+      const choix = candidates[0];
+      tablesOccupees.add(choix.id);
+      nouvelles.push({ resaId: resa.id, tableId: choix.id });
+    } else {
+      // Fallback : table la plus grande disponible même si insuffisante
+      const fallback = tables
+        .filter(t => !tablesOccupees.has(t.id))
+        .sort((a, b) => tableCap(b) - tableCap(a));
+      if (fallback.length) {
+        tablesOccupees.add(fallback[0].id);
+        nouvelles.push({ resaId: resa.id, tableId: fallback[0].id });
+      }
+      // sinon pas de table dispo → on passe
+    }
+  }
+
+  if (!nouvelles.length) {
+    showToast('Toutes les réservations sont déjà assignées.', 'success');
+    return;
+  }
+
+  // Confirmation
+  const msg = 'Assigner automatiquement ' + nouvelles.length + ' réservation' + (nouvelles.length > 1 ? 's' : '') + ' aux tables ?\n\n' +
+    nouvelles.map(n => {
+      const r = allResas.find(x => x.id === n.resaId);
+      const t = tables.find(x => x.id === n.tableId);
+      return '• ' + (r ? r.nom + ' (' + r.couverts + 'p)' : '?') + ' → ' + (t ? t.num + ' (' + t.cap + 'p)' : '?');
+    }).join('\n');
+
+  if (!confirm(msg)) return;
+
+  // Application en base
+  const btn = $('btn-auto-assign');
+  btn.disabled = true;
+  btn.textContent = '⏳ Assignation…';
+
+  try {
+    for (const { resaId, tableId } of nouvelles) {
+      await apiUpdate(resaId, { table_id: tableId });
+      assignments[tableId] = resaId;
+      const r = allResas.find(x => x.id === resaId);
+      if (r) r.table_id = tableId;
+    }
+    closeTablePanel();
+    await renderSalle();
+    showToast(`✓ ${nouvelles.length} réservation${nouvelles.length > 1 ? 's assignées' : ' assignée'} !`, 'success');
+  } catch(e) {
+    showToast('Erreur lors de l\'auto-assignation.', 'error');
+    console.error(e);
+  }
+
+  btn.disabled = false;
+  btn.textContent = '⚡ Auto-assigner';
 }
 
 // ── IMPRESSION PLAN DE SALLE ─────────────────────────────
