@@ -258,14 +258,16 @@
     box-shadow:0 2px 12px rgba(0,0,0,0.07);
     border:1.5px solid var(--gris-clair);
     position:relative; overflow:hidden;
-    min-height:500px; height:60vh;
+    min-height:500px; height:65vh;
     cursor:default;
     /* grille de fond */
     background-image: radial-gradient(circle, #d0c8c0 1px, transparent 1px);
     background-size: 30px 30px;
     background-color: #FAF7F4;
+    user-select:none;
   }
-  .salle-canvas-wrap.edit-mode { cursor:crosshair; }
+  .salle-canvas-wrap.edit-mode { cursor:default; }
+  #salle-layer { will-change:transform; }
 
   /* Tables */
   .table-sq {
@@ -914,6 +916,14 @@
       <!-- Actions édition -->
       <button class="btn-salle" id="btn-add-table" style="display:none" onclick="ajouterTable()">＋ Table</button>
       <button class="btn-salle" id="btn-save-plan" style="display:none" onclick="savePlan()">💾 Sauvegarder</button>
+      <div class="salle-toolbar-sep"></div>
+      <!-- Zoom -->
+      <div style="display:flex;align-items:center;gap:4px;">
+        <button class="btn-salle" onclick="salleZoom(-0.1)" title="Dézoomer" style="padding:7px 10px;font-size:1.1rem;font-weight:700;">−</button>
+        <span id="zoom-label" style="font-size:0.75rem;font-weight:700;color:var(--gris);min-width:36px;text-align:center;">100%</span>
+        <button class="btn-salle" onclick="salleZoom(+0.1)" title="Zoomer" style="padding:7px 10px;font-size:1.1rem;font-weight:700;">＋</button>
+        <button class="btn-salle" onclick="salleZoomReset()" title="Réinitialiser le zoom" style="padding:7px 10px;font-size:0.72rem;">↺</button>
+      </div>
     </div>
 
     <!-- Légende -->
@@ -925,6 +935,7 @@
 
     <!-- Canvas -->
     <div class="salle-canvas-wrap" id="salle-canvas">
+      <div id="salle-layer" style="position:absolute;top:0;left:0;width:2000px;height:2000px;transform-origin:0 0;"></div>
       <div class="table-panel" id="table-panel">
         <div class="table-panel-title" id="tp-title">Table —</div>
         <!-- Mode édition -->
@@ -2174,6 +2185,30 @@ let selectedTableId = null;
 let dragState = null;
 const SNAP = 10; // snap to grid px
 
+// ── ZOOM & PAN ────────────────────────────────────────────
+let salleZoomLevel = 1.0;
+let sallePan = { x: 0, y: 0 };
+let isPanning = false;
+let panStart = { x: 0, y: 0 };
+
+function applyZoom() {
+  const layer = $('salle-layer');
+  if (!layer) return;
+  layer.style.transform = `scale(${salleZoomLevel})`;
+  const label = $('zoom-label');
+  if (label) label.textContent = Math.round(salleZoomLevel * 100) + '%';
+}
+
+function salleZoom(delta) {
+  salleZoomLevel = Math.min(2.5, Math.max(0.3, salleZoomLevel + delta));
+  applyZoom();
+}
+
+function salleZoomReset() {
+  salleZoomLevel = 1.0;
+  applyZoom();
+}
+
 // ── PLAN DE SALLE — SUPABASE ─────────────────────────────
 const PLAN_URL = 'https://zwjgenpxsjvzmxqoxepv.supabase.co/rest/v1/plan_salle';
 const PLAN_HEADERS = {
@@ -2292,11 +2327,12 @@ function setMode(mode) {
 
 async function renderSalle() {
   const canvas = $('salle-canvas');
+  const layer  = $('salle-layer');
   const dateStr = $('salle-date').value;
   if (salleMode === 'service' && dateStr) await loadAssignments(dateStr);
 
   // Retire les tables existantes (garde le panel)
-  canvas.querySelectorAll('.table-sq').forEach(el => el.remove());
+  layer.querySelectorAll('.table-sq').forEach(el => el.remove());
 
   tables.forEach(t => {
     const el = document.createElement('div');
@@ -2324,28 +2360,36 @@ async function renderSalle() {
     // Click = sélection
     el.addEventListener('click', e => { e.stopPropagation(); selectTable(t.id); });
 
-    canvas.insertBefore(el, $('table-panel'));
+    layer.appendChild(el);
   });
+
+  applyZoom();
 }
 
 // ── DRAG & DROP ───────────────────────────────────────────
 function startDrag(e, id) {
   if (e.button !== 0) return;
   e.preventDefault();
+  if (salleMode !== 'edit') return;
   const t = tables.find(x=>x.id===id);
-  const canvas = $('salle-canvas');
-  const rect = canvas.getBoundingClientRect();
-  dragState = { id, startX: e.clientX - rect.left - t.x, startY: e.clientY - rect.top - t.y };
+  const layer = $('salle-layer');
+  const rect = layer.getBoundingClientRect();
+  // Divise par zoom pour obtenir les coordonnées dans l'espace du layer
+  dragState = {
+    id,
+    startX: (e.clientX - rect.left) / salleZoomLevel - t.x,
+    startY: (e.clientY - rect.top)  / salleZoomLevel - t.y
+  };
   $('tbl-'+id).classList.add('dragging');
 
   const onMove = ev => {
-    const r = canvas.getBoundingClientRect();
-    let nx = ev.clientX - r.left - dragState.startX;
-    let ny = ev.clientY - r.top  - dragState.startY;
+    const r = layer.getBoundingClientRect();
+    let nx = (ev.clientX - r.left) / salleZoomLevel - dragState.startX;
+    let ny = (ev.clientY - r.top)  / salleZoomLevel - dragState.startY;
     const tw = t.forme==='rect-h' ? 128 : 64;
     const th = t.forme==='rect-v' ? 128 : 64;
-    nx = Math.max(0, Math.min(r.width-tw,  Math.round(nx/SNAP)*SNAP));
-    ny = Math.max(0, Math.min(r.height-th, Math.round(ny/SNAP)*SNAP));
+    nx = Math.max(0, Math.round(nx/SNAP)*SNAP);
+    ny = Math.max(0, Math.round(ny/SNAP)*SNAP);
     t.x = nx; t.y = ny;
     const el = $('tbl-'+id);
     el.style.left = nx+'px'; el.style.top = ny+'px';
@@ -2364,22 +2408,27 @@ function startDrag(e, id) {
 
 function startDragTouch(e, id) {
   e.preventDefault();
+  if (salleMode !== 'edit') return;
   const t = tables.find(x=>x.id===id);
-  const canvas = $('salle-canvas');
-  const rect = canvas.getBoundingClientRect();
+  const layer = $('salle-layer');
+  const rect = layer.getBoundingClientRect();
   const touch = e.touches[0];
-  dragState = { id, startX: touch.clientX - rect.left - t.x, startY: touch.clientY - rect.top - t.y };
+  dragState = {
+    id,
+    startX: (touch.clientX - rect.left) / salleZoomLevel - t.x,
+    startY: (touch.clientY - rect.top)  / salleZoomLevel - t.y
+  };
   $('tbl-'+id).classList.add('dragging');
 
   const onMove = ev => {
-    const r = canvas.getBoundingClientRect();
+    const r = layer.getBoundingClientRect();
     const tc = ev.touches[0];
-    let nx = tc.clientX - r.left - dragState.startX;
-    let ny = tc.clientY - r.top  - dragState.startY;
+    let nx = (tc.clientX - r.left) / salleZoomLevel - dragState.startX;
+    let ny = (tc.clientY - r.top)  / salleZoomLevel - dragState.startY;
     const tw = t.forme==='rect-h' ? 128 : 64;
     const th = t.forme==='rect-v' ? 128 : 64;
-    nx = Math.max(0, Math.min(r.width-tw,  Math.round(nx/SNAP)*SNAP));
-    ny = Math.max(0, Math.min(r.height-th, Math.round(ny/SNAP)*SNAP));
+    nx = Math.max(0, Math.round(nx/SNAP)*SNAP);
+    ny = Math.max(0, Math.round(ny/SNAP)*SNAP);
     t.x = nx; t.y = ny;
     const el = $('tbl-'+id);
     el.style.left = nx+'px'; el.style.top = ny+'px';
@@ -2387,13 +2436,14 @@ function startDragTouch(e, id) {
   const onUp = () => {
     $('tbl-'+id).classList.remove('dragging');
     dragState = null;
-    canvas.removeEventListener('touchmove', onMove);
-    canvas.removeEventListener('touchend', onUp);
+    const layer = $('salle-layer');
+    layer.removeEventListener('touchmove', onMove);
+    layer.removeEventListener('touchend', onUp);
     savePlanLocal();
     savePlanRemote();
   };
-  canvas.addEventListener('touchmove', onMove, {passive:false});
-  canvas.addEventListener('touchend', onUp);
+  layer.addEventListener('touchmove', onMove, {passive:false});
+  layer.addEventListener('touchend', onUp);
 }
 
 // ── SÉLECTION TABLE ───────────────────────────────────────
@@ -2426,24 +2476,37 @@ function selectTable(id) {
   }
   $('table-panel').classList.add('visible');
   // Highlight
-  document.querySelectorAll('.table-sq').forEach(el => el.classList.remove('selected'));
+  ($('salle-layer')||document).querySelectorAll('.table-sq').forEach(el => el.classList.remove('selected'));
   const el = $('tbl-'+id);
   if (el) el.classList.add('selected');
 }
 
 function closeTablePanel() {
   selectedTableId = null;
-  $('table-panel').classList.remove('visible');
-  document.querySelectorAll('.table-sq').forEach(el => el.classList.remove('selected'));
+  if ($('table-panel')) $('table-panel').classList.remove('visible');
+  ($('salle-layer')||document).querySelectorAll('.table-sq').forEach(el => el.classList.remove('selected'));
 }
 
 // Click sur canvas = deselect (sauf si clic dans le panel)
 document.addEventListener('click', e => {
-  if ($('table-panel').contains(e.target)) return;
+  if ($('table-panel') && $('table-panel').contains(e.target)) return;
   if (e.target.id === 'salle-canvas' || e.target.closest('#salle-canvas')) {
     if (!e.target.closest('.table-sq') && !e.target.closest('.table-panel')) {
       closeTablePanel();
     }
+  }
+});
+
+// Molette = zoom sur le canvas
+document.addEventListener('DOMContentLoaded', () => {
+  const canvas = $('salle-canvas');
+  if (canvas) {
+    canvas.addEventListener('wheel', e => {
+      if (!e.target.closest('#salle-canvas')) return;
+      e.preventDefault();
+      const delta = e.deltaY < 0 ? 0.1 : -0.1;
+      salleZoom(delta);
+    }, { passive: false });
   }
 });
 
@@ -2554,6 +2617,7 @@ async function desassignerTable() {
 async function initSalle() {
   await loadPlan();
   $('salle-date').value = new Date().toISOString().split('T')[0];
+  salleZoomLevel = 1.0;
   setMode('service');
 }
 
