@@ -2856,14 +2856,21 @@ function fermerModalAA() {
 }
 
 async function confirmerAutoAssign() {
+  // Sauvegarder AVANT de fermer le modal (fermerModalAA vide _aaNouvelles)
+  const aAssigner = _aaNouvelles.map(n => ({ ...n }));
   fermerModalAA();
+
+  if (!aAssigner.length) {
+    showToast('Aucune assignation à effectuer.', 'error');
+    return;
+  }
 
   const btn = $('btn-auto-assign');
   btn.disabled = true;
   btn.textContent = '⏳ Assignation…';
 
   try {
-    for (const { resaId, tableId } of _aaNouvelles) {
+    for (const { resaId, tableId } of aAssigner) {
       await apiUpdate(resaId, { table_id: tableId });
       assignments[Number(tableId)] = resaId;
       const r = allResas.find(x => x.id === resaId);
@@ -2871,14 +2878,13 @@ async function confirmerAutoAssign() {
     }
     closeTablePanel();
     await renderSalle(true);
-    const nb = _aaNouvelles.length;
+    const nb = aAssigner.length;
     showToast('✓ ' + nb + ' réservation' + (nb > 1 ? 's assignées' : ' assignée') + ' !', 'success');
   } catch(e) {
     showToast('Erreur lors de l\'auto-assignation.', 'error');
     console.error(e);
   }
 
-  _aaNouvelles = [];
   btn.disabled = false;
   btn.textContent = '⚡ Auto-assigner';
 }
