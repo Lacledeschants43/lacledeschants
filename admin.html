@@ -330,19 +330,12 @@
   .btn-tp-unassign:hover { color:var(--error); border-color:var(--error) !important; }
   .btn-tp-del { background:none; color:var(--error); border:1.5px solid var(--error) !important; border:none; margin-top:4px; }
   .btn-tp-del:hover { background:var(--error); color:var(--blanc); }
+/* ── IMPRESSION TICKET (format 80mm) ── */
 @media print {
   body > *:not(#print-area) { display: none !important; }
   #print-area { display: block !important; }
-  @page { margin: 0; size: 80mm auto; }
-  body.print-plan > *:not(#print-area) { display: none !important; }
-  body.print-plan #print-area { display: block !important; }
-  body.print-plan { margin:0; padding:0; }
-  body.print-plan @page { size: A4 landscape; margin: 10mm; }
 }
-@media print {
-  body.print-plan { }
-  body.print-plan * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-}
+@page { margin: 0; size: 80mm auto; }
 
 #print-area {
   display: none;
@@ -350,6 +343,33 @@
   width: 76mm;
   color: #000;
   padding: 5mm 4mm;
+}
+
+/* ── IMPRESSION PLAN DE SALLE (A4 paysage) ── */
+#print-area-plan {
+  display: none;
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background: white;
+  z-index: 99999;
+  box-sizing: border-box;
+  padding: 8mm;
+}
+@media print {
+  body.print-plan > *:not(#print-area-plan) { display: none !important; }
+  body.print-plan #print-area-plan {
+    display: block !important;
+    position: fixed !important;
+    inset: 0 !important;
+    padding: 8mm !important;
+    width: 100% !important;
+    height: 100% !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  @page { size: A4 landscape; margin: 0; }
 }
 
 .ticket-big-label {
@@ -1177,6 +1197,7 @@
 </div>
 
 <div id="print-area"></div>
+<div id="print-area-plan"></div>
 
 <div class="toast" id="toast"></div>
 
@@ -2919,11 +2940,11 @@ async function confirmerAutoAssign() {
 async function imprimerPlanSalle() {
   if (!tables.length) { showToast('Aucune table à imprimer.', 'error'); return; }
 
-  // Recharger les assignments depuis allResas pour avoir l'état à jour
+  // Recharger les assignments pour avoir l'état à jour
   const dateStr = $('salle-date').value;
   if (dateStr) await loadAssignments(dateStr);
 
-  // Calcul bounding box des tables pour adapter le SVG
+  // Bounding box des tables
   let maxX = 0, maxY = 0;
   tables.forEach(t => {
     const tw = t.forme === 'rect-h' ? 128 : 64;
@@ -2931,17 +2952,9 @@ async function imprimerPlanSalle() {
     maxX = Math.max(maxX, t.x + tw);
     maxY = Math.max(maxY, t.y + th);
   });
-  const PAD = 40;
-  const W = maxX + PAD * 2;
-  const H = maxY + PAD * 2;
-
-  let titre = 'Plan de salle';
-  if (dateStr) {
-    const d = new Date(dateStr + 'T12:00:00');
-    const JOURS = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
-    const MOIS  = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
-    titre += ' — ' + JOURS[d.getDay()] + ' ' + d.getDate() + ' ' + MOIS[d.getMonth()] + ' ' + d.getFullYear();
-  }
+  const PAD = 30;
+  const VW = maxX + PAD * 2;  // largeur du viewBox
+  const VH = maxY + PAD * 2 + 30; // hauteur + place légende
 
   // Génère les tables en SVG
   let tablesSvg = '';
@@ -2950,96 +2963,71 @@ async function imprimerPlanSalle() {
     const th = t.forme === 'rect-v' ? 128 : 64;
     const tx = t.x + PAD;
     const ty = t.y + PAD;
-
-    // Lookup direct par Number — fiable quel que soit le type
-    const resaId = assignments[Number(t.id)];
-    const resa = resaId ? allResas.find(r => r.id === resaId) : null;
-
-    const isTerrace = t.type === 'terrasse';
-    const isOccupee = !!resa;
-
-    const fillColor   = isOccupee ? '#fdecea' : isTerrace ? '#fffbe6' : '#e8f5ee';
-    const strokeColor = isOccupee ? '#c0392b' : isTerrace ? '#C9A84C' : '#2d7a4f';
-    const strokeDash  = isTerrace ? 'stroke-dasharray="6,3"' : '';
-    const numColor    = isOccupee ? '#c0392b' : isTerrace ? '#8a6200' : '#2d7a4f';
-
     const cx = tx + tw / 2;
     const cy = ty + th / 2;
 
-    // Nom de résa tronqué
+    const resaId = assignments[Number(t.id)];
+    const resa   = resaId ? allResas.find(r => r.id === resaId) : null;
+
+    const isTerrace  = t.type === 'terrasse';
+    const isOccupee  = !!resa;
+    const fillColor  = isOccupee ? '#fdecea' : isTerrace ? '#fffbe6' : '#e8f5ee';
+    const strokeColor= isOccupee ? '#c0392b' : isTerrace ? '#C9A84C' : '#2d7a4f';
+    const strokeDash = isTerrace ? 'stroke-dasharray="6,3"' : '';
+    const numColor   = isOccupee ? '#c0392b' : isTerrace ? '#8a6200' : '#2d7a4f';
+
     let resaLine = '';
     if (resa) {
-      const nomCourt = resa.nom.length > 12 ? resa.nom.slice(0, 11) + '…' : resa.nom;
+      const nomCourt = resa.nom.length > 14 ? resa.nom.slice(0,13)+'…' : resa.nom;
       const heure = resa.heure ? resa.heure.slice(0,5).replace(':','h') : '';
-      resaLine = `<text x="${cx}" y="${cy + 10}" text-anchor="middle" font-family="Arial,sans-serif" font-size="8" font-weight="700" fill="#c0392b">${escHTML(nomCourt)}</text>`;
-      if (heure) resaLine += `<text x="${cx}" y="${cy + 20}" text-anchor="middle" font-family="Arial,sans-serif" font-size="7" fill="#888">${heure} · ${resa.couverts}p</text>`;
+      resaLine = '<text x="'+cx+'" y="'+(cy+10)+'" text-anchor="middle" font-family="Arial,sans-serif" font-size="9" font-weight="700" fill="#c0392b">'+escHTML(nomCourt)+'</text>';
+      if (heure) resaLine += '<text x="'+cx+'" y="'+(cy+21)+'" text-anchor="middle" font-family="Arial,sans-serif" font-size="8" fill="#888">'+heure+' · '+resa.couverts+'p</text>';
     }
 
-    tablesSvg += `
-      <g>
-        <rect x="${tx}" y="${ty}" width="${tw}" height="${th}" rx="6"
-          fill="${fillColor}" stroke="${strokeColor}" stroke-width="2" ${strokeDash}/>
-        <text x="${cx}" y="${cy - (resa ? 12 : 4)}" text-anchor="middle"
-          font-family="Arial,sans-serif" font-size="13" font-weight="700" fill="${numColor}">${escHTML(t.num)}</text>
-        <text x="${cx}" y="${cy + (resa ? -2 : 10)}" text-anchor="middle"
-          font-family="Arial,sans-serif" font-size="9" fill="#888">${t.cap}p</text>
-        ${resaLine}
-      </g>`;
+    tablesSvg +=
+      '<g>' +
+        '<rect x="'+tx+'" y="'+ty+'" width="'+tw+'" height="'+th+'" rx="6" fill="'+fillColor+'" stroke="'+strokeColor+'" stroke-width="2" '+strokeDash+'/>' +
+        '<text x="'+cx+'" y="'+(cy-(resa?14:4))+'" text-anchor="middle" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="'+numColor+'">'+escHTML(t.num)+'</text>' +
+        '<text x="'+cx+'" y="'+(cy-(resa?2:10))+'" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" fill="#999">'+t.cap+'p</text>' +
+        resaLine +
+      '</g>';
   });
 
-  // Légende
-  const legendY = H + 10;
-  const legendSvg = `
-    <rect x="${PAD}" y="${legendY}" width="14" height="14" rx="3" fill="#e8f5ee" stroke="#2d7a4f" stroke-width="1.5"/>
-    <text x="${PAD + 18}" y="${legendY + 11}" font-family="Arial,sans-serif" font-size="11" fill="#444">Libre (intérieur)</text>
-    <rect x="${PAD + 120}" y="${legendY}" width="14" height="14" rx="3" fill="#fffbe6" stroke="#C9A84C" stroke-width="1.5" stroke-dasharray="4,2"/>
-    <text x="${PAD + 138}" y="${legendY + 11}" font-family="Arial,sans-serif" font-size="11" fill="#444">Terrasse</text>
-    <rect x="${PAD + 220}" y="${legendY}" width="14" height="14" rx="3" fill="#fdecea" stroke="#c0392b" stroke-width="1.5"/>
-    <text x="${PAD + 238}" y="${legendY + 11}" font-family="Arial,sans-serif" font-size="11" fill="#444">Occupée</text>`;
+  // Légende en bas du SVG
+  const ly = VH - 22;
+  const legendSvg =
+    '<rect x="'+PAD+'" y="'+ly+'" width="12" height="12" rx="2" fill="#e8f5ee" stroke="#2d7a4f" stroke-width="1.5"/>' +
+    '<text x="'+(PAD+16)+'" y="'+(ly+10)+'" font-family="Arial,sans-serif" font-size="11" fill="#444">Libre</text>' +
+    '<rect x="'+(PAD+60)+'" y="'+ly+'" width="12" height="12" rx="2" fill="#fffbe6" stroke="#C9A84C" stroke-width="1.5" stroke-dasharray="4,2"/>' +
+    '<text x="'+(PAD+76)+'" y="'+(ly+10)+'" font-family="Arial,sans-serif" font-size="11" fill="#444">Terrasse</text>' +
+    '<rect x="'+(PAD+140)+'" y="'+ly+'" width="12" height="12" rx="2" fill="#fdecea" stroke="#c0392b" stroke-width="1.5"/>' +
+    '<text x="'+(PAD+156)+'" y="'+(ly+10)+'" font-family="Arial,sans-serif" font-size="11" fill="#444">Occupée</text>';
 
-  const totalH = H + 40;
+  const svgContent =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+VW+' '+VH+'" ' +
+        'style="width:100%;height:100%;display:block;">' +
+      '<defs>' +
+        '<pattern id="pgrid" width="30" height="30" patternUnits="userSpaceOnUse">' +
+          '<circle cx="1" cy="1" r="1" fill="#d0c8c0" opacity="0.4"/>' +
+        '</pattern>' +
+      '</defs>' +
+      '<rect width="'+VW+'" height="'+VH+'" fill="#FAF7F4"/>' +
+      '<rect x="'+(PAD-8)+'" y="'+(PAD-8)+'" width="'+(maxX+16)+'" height="'+(maxY+16)+'" fill="url(#pgrid)" rx="6"/>' +
+      tablesSvg +
+      legendSvg +
+    '</svg>';
 
-  const svgContent = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${totalH}" viewBox="0 0 ${W} ${totalH}"
-         style="width:100%;height:auto;max-width:100%;">
-      <!-- Grille de fond -->
-      <defs>
-        <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
-          <circle cx="1" cy="1" r="1" fill="#d0c8c0" opacity="0.5"/>
-        </pattern>
-      </defs>
-      <rect width="${W}" height="${totalH}" fill="#FAF7F4"/>
-      <rect x="${PAD - 10}" y="${PAD - 10}" width="${maxX + 20}" height="${maxY + 20}" fill="url(#grid)" rx="8"/>
-      ${tablesSvg}
-      ${legendSvg}
-    </svg>`;
+  // Injecter dans print-area-plan (pas le ticket !)
+  $('print-area-plan').innerHTML = svgContent;
 
-  const now = new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
-
-  $('print-area').innerHTML = `
-    <div style="font-family:Arial,sans-serif;padding:8mm;color:#1a1a1a;">
-      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6mm;border-bottom:2px solid #6B1A2A;padding-bottom:4mm;">
-        <div style="font-size:18px;font-weight:900;color:#6B1A2A;">La Clé des Chants</div>
-        <div style="font-size:13px;font-weight:700;color:#1a1a1a;">${titre}</div>
-        <div style="font-size:10px;color:#888;">Imprimé à ${now}</div>
-      </div>
-      ${svgContent}
-    </div>`;
-
-  // Forcer A4 paysage pour ce print
-  const style = document.createElement('style');
-  style.id = 'print-plan-style';
-  style.textContent = '@page { size: A4 landscape; margin: 8mm; }';
-  document.head.appendChild(style);
-
+  // Appliquer la classe pour le CSS d'impression plan
+  document.body.classList.add('print-plan');
   window.print();
-
-  // Nettoyer après
-  setTimeout(() => {
-    const s = document.getElementById('print-plan-style');
-    if (s) s.remove();
-  }, 1000);
+  document.body.classList.remove('print-plan');
+  // Vider après
+  setTimeout(() => { $('print-area-plan').innerHTML = ''; }, 500);
 }
+
 
 // ── INIT SALLE ────────────────────────────────────────────
 async function initSalle() {
