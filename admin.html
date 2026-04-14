@@ -763,6 +763,15 @@
           <label for="f-heure">Heure souhaitée</label>
           <div class="select-wrap"><select id="f-heure"><option value="">— Sans préférence —</option></select></div>
         </div>
+        <div class="form-group">
+          <label for="f-placement">Placement</label>
+          <div class="select-wrap">
+            <select id="f-placement">
+              <option value="interieur" selected>🏠 Intérieur</option>
+              <option value="terrasse">☀️ Terrasse</option>
+            </select>
+          </div>
+        </div>
         <div class="form-group full">
           <label for="f-comment">Commentaire</label>
           <textarea id="f-comment" placeholder="Allergie, chaise bébé, anniversaire…"></textarea>
@@ -862,6 +871,7 @@
       <div class="form-group"><label>Personnes <span class="form-required">*</span></label><input type="number" id="edit-couverts" min="1" max="75"></div>
       <div class="form-group"><label>Heure</label><div class="select-wrap"><select id="edit-heure"><option value="">— Sans préférence —</option></select></div></div>
       <div class="form-group"><label>Téléphone</label><input type="tel" id="edit-tel"></div>
+      <div class="form-group"><label>Placement</label><div class="select-wrap"><select id="edit-placement"><option value="interieur">🏠 Intérieur</option><option value="terrasse">☀️ Terrasse</option></select></div></div>
       <div class="form-group full"><label>Commentaire</label><textarea id="edit-comment"></textarea></div>
     </div>
     <div class="modal-actions">
@@ -1583,17 +1593,19 @@ async function submitReservation() {
 
   try {
     const resaData = {
-      nom:      $('f-nom').value.trim(),
-      date:     $('f-date').value,
-      couverts: +$('f-couverts').value,
-      heure:    $('f-heure').value || null,
-      tel:      $('f-phone').value.trim(),
-      comment:  $('f-comment').value.trim() || null,
+      nom:       $('f-nom').value.trim(),
+      date:      $('f-date').value,
+      couverts:  +$('f-couverts').value,
+      heure:     $('f-heure').value || null,
+      tel:       $('f-phone').value.trim(),
+      comment:   $('f-comment').value.trim() || null,
+      placement: $('f-placement').value || 'interieur',
     };
     await apiInsert(resaData);
     envoyerMailBrevo(resaData, 'admin');
     $('f-nom').value=''; $('f-couverts').value='';
     $('f-heure').value=''; $('f-phone').value=''; $('f-comment').value='';
+    $('f-placement').value='interieur';
     initCalMain();
     showToast('✓ Réservation enregistrée !','success');
   } catch(e) {
@@ -1945,6 +1957,7 @@ function openEdit(id) {
   calState.edit.year = d.getFullYear(); calState.edit.month = d.getMonth();
   $('edit-couverts').value=r.couverts;
   $('edit-heure').value=r.heure||''; $('edit-tel').value=r.tel||''; $('edit-comment').value=r.comment||'';
+  $('edit-placement').value=r.placement||'interieur';
   $('modal-overlay').classList.add('open');
 }
 
@@ -1956,7 +1969,7 @@ async function saveEdit() {
   const id=$('edit-id').value, nom=$('edit-nom').value.trim(),
         date=$('edit-date').value, couverts=+$('edit-couverts').value;
   if(!nom||!date||!couverts||couverts<1||couverts>75){showToast('Champs obligatoires manquants.','error');return;}
-  const u={nom,date,couverts,heure:$('edit-heure').value||null,tel:$('edit-tel').value.trim()||null,comment:$('edit-comment').value.trim()||null};
+  const u={nom,date,couverts,heure:$('edit-heure').value||null,tel:$('edit-tel').value.trim()||null,comment:$('edit-comment').value.trim()||null,placement:$('edit-placement').value||'interieur'};
   try {
     await apiUpdate(id,u);
     const i=allResas.findIndex(r=>r.id==id);
@@ -2673,26 +2686,39 @@ async function autoAssigner() {
   for (const resa of resas) {
     if (resasDejaAssignees.has(resa.id)) continue; // déjà placée
 
-    // Cherche la table libre la mieux adaptée (capacité >= couverts, la plus petite possible)
-    const candidates = tables
-      .filter(t => !tablesOccupees.has(t.id) && tableCap(t) >= resa.couverts)
-      .sort((a, b) => tableCap(a) - tableCap(b)); // best-fit : plus petite qui convient
+    const placement = resa.placement || 'interieur';
 
-    if (candidates.length) {
-      const choix = candidates[0];
-      tablesOccupees.add(choix.id);
-      nouvelles.push({ resaId: resa.id, tableId: choix.id });
-    } else {
-      // Fallback : table la plus grande disponible même si insuffisante
-      const fallback = tables
+    // 1er essai : table du bon type ET capacité suffisante
+    let candidates = tables
+      .filter(t => !tablesOccupees.has(t.id) && t.type === placement && tableCap(t) >= resa.couverts)
+      .sort((a, b) => tableCap(a) - tableCap(b));
+
+    // 2e essai : n'importe quel type, capacité suffisante
+    if (!candidates.length) {
+      candidates = tables
+        .filter(t => !tablesOccupees.has(t.id) && tableCap(t) >= resa.couverts)
+        .sort((a, b) => tableCap(a) - tableCap(b));
+    }
+
+    // 3e essai (fallback) : table du bon type, capacité insuffisante mais la plus grande
+    if (!candidates.length) {
+      candidates = tables
+        .filter(t => !tablesOccupees.has(t.id) && t.type === placement)
+        .sort((a, b) => tableCap(b) - tableCap(a));
+    }
+
+    // Dernier recours : n'importe quelle table libre
+    if (!candidates.length) {
+      candidates = tables
         .filter(t => !tablesOccupees.has(t.id))
         .sort((a, b) => tableCap(b) - tableCap(a));
-      if (fallback.length) {
-        tablesOccupees.add(fallback[0].id);
-        nouvelles.push({ resaId: resa.id, tableId: fallback[0].id });
-      }
-      // sinon pas de table dispo → on passe
     }
+
+    if (candidates.length) {
+      tablesOccupees.add(candidates[0].id);
+      nouvelles.push({ resaId: resa.id, tableId: candidates[0].id });
+    }
+    // sinon pas de table dispo → on passe
   }
 
   if (!nouvelles.length) {
