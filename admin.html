@@ -2701,13 +2701,18 @@ async function autoAssigner() {
   try {
     for (const { resaId, tableId } of nouvelles) {
       if (tableId > 2147483647) { showToast('ID de table invalide — recréez les tables depuis le mode Édition.', 'error'); break; }
-      await apiUpdate(resaId, { table_id: tableId });
+      console.log('[autoAssigner] apiUpdate resaId=', resaId, 'table_id=', tableId, 'types:', typeof resaId, typeof tableId);
+      const resp = await apiUpdate(resaId, { table_id: tableId });
+      console.log('[autoAssigner] réponse Supabase:', JSON.stringify(resp));
       assignments[Number(tableId)] = resaId;
       const r = allResas.find(x => x.id === resaId);
+      console.log('[autoAssigner] resa trouvée dans allResas:', r ? r.nom : 'NON TROUVÉE', '| r.id type:', r ? typeof r.id : '?');
       if (r) r.table_id = Number(tableId);
     }
+    console.log('[autoAssigner] assignments final:', JSON.stringify(assignments));
+    console.log('[autoAssigner] tables ids:', tables.map(t => t.id + '(' + typeof t.id + ')'));
     closeTablePanel();
-    await renderSalle(true); // ne pas écraser assignments qu'on vient de remplir
+    await renderSalle(true);
     showToast(`✓ ${nouvelles.length} réservation${nouvelles.length > 1 ? 's assignées' : ' assignée'} !`, 'success');
   } catch(e) {
     showToast('Erreur lors de l\'auto-assignation.', 'error');
