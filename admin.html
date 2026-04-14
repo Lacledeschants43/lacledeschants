@@ -1846,7 +1846,8 @@ function renderViewToday(newId=null) {
   $('day-label-top').textContent = isToday ? "Aujourd\'hui" : "Jour sélectionné";
   const resas = allResas.filter(r=>r.date===dayStr).sort((a,b)=>(a.heure||'99').localeCompare(b.heure||'99'));
   const totC = resas.reduce((s,r)=>s+r.couverts,0);
-  let html = `<div class="day-view-header"><span>${label}</span><span class="day-view-count">${resas.length} réservation${resas.length!==1?'s':''} · ${totC} couvert${totC>1?'s':''}</span></div>`;
+  const printBtn = resas.length ? `<button class="btn-print" onclick="imprimerJour('${dayStr}')" style="font-size:0.82rem;padding:6px 12px;">🖨️ Imprimer</button>` : '';
+  let html = `<div class="day-view-header"><span>${label}</span><div style="display:flex;align-items:center;gap:12px;"><span class="day-view-count">${resas.length} réservation${resas.length!==1?'s':''} · ${totC} couvert${totC>1?'s':''}</span>${printBtn}</div></div>`;
   if (!resas.length) html += `<div class="empty-state"><div class="empty-icon">📋</div><p>Aucune réservation ce jour.</p></div>`;
   else html += resas.map(r=>buildResaCard(r,newId)).join('');
   $('agenda-view').innerHTML = html;
