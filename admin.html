@@ -181,6 +181,14 @@
   .clients-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
   .clients-title { font-family: 'Playfair Display', serif; font-size: 1.8rem; color: var(--bordeaux); }
 
+  .btn-export-csv {
+    background: none; border: 1.5px solid var(--gris-clair); border-radius: 7px;
+    padding: 8px 16px; font-family: 'Lato', sans-serif; font-size: 0.8rem; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; color: var(--gris);
+    transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+  }
+  .btn-export-csv:hover { border-color: var(--success); color: var(--success); background: rgba(45,122,79,0.05); }
+
   .clients-search-wrap { position: relative; margin-bottom: 24px; }
   .clients-search-wrap::before { content: '🔍'; position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 1rem; pointer-events: none; }
   #client-search { width: 100%; padding: 12px 14px 12px 42px; border: 1.5px solid var(--gris-clair); border-radius: 8px; font-family: 'Lato', sans-serif; font-size: 0.95rem; background: var(--blanc); outline: none; transition: border-color 0.2s; }
@@ -1028,6 +1036,7 @@
   <div class="clients-wrapper">
     <div class="clients-header">
       <div class="clients-title">Fichier clients</div>
+      <button class="btn-export-csv" onclick="exporterContactsCSV()" title="Exporter au format Google Contacts">⬇️ Exporter Google Contacts</button>
     </div>
     <div class="clients-search-wrap">
       <input type="text" id="client-search" placeholder="Rechercher un client…" oninput="renderClients()">
@@ -3240,6 +3249,46 @@ async function supprimerFermeture(id, label) {
   } catch(e) {
     showToast('Erreur lors de la suppression.', 'error');
   }
+}
+
+// ── EXPORT GOOGLE CONTACTS CSV ───────────────────────────
+function exporterContactsCSV() {
+  // Dédoublonner les clients (un seul par nom normalisé, numéro le plus récent)
+  const seen = new Map();
+  // allResas est trié date.asc → on parcourt en sens inverse pour garder le plus récent
+  [...allResas].reverse().forEach(r => {
+    const key = normaliserNom(r.nom);
+    if (!seen.has(key)) {
+      seen.set(key, { nom: r.nom.trim(), tel: r.tel ? r.tel.trim() : '' });
+    }
+  });
+
+  const clients = [...seen.values()].filter(c => c.nom);
+  if (!clients.length) { showToast('Aucun client à exporter.', 'error'); return; }
+
+  // En-têtes au format Google Contacts
+  const headers = ['Name', 'Given Name', 'Family Name', 'Phone 1 - Value', 'Phone 1 - Type'];
+
+  const rows = clients.map(c => {
+    // Sépare prénom / nom si possible (premier mot = prénom, reste = nom)
+    const parts = c.nom.split(' ');
+    const prenom = parts[0] || '';
+    const nom    = parts.slice(1).join(' ') || '';
+    const tel    = c.tel || '';
+    // Échapper les guillemets dans les champs
+    const esc = s => '"' + s.replace(/"/g, '""') + '"';
+    return [esc(c.nom), esc(prenom), esc(nom), esc(tel), '"Mobile"'].join(',');
+  });
+
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'contacts_cle_des_chants.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast(`✓ ${clients.length} contacts exportés !`, 'success');
 }
 
 // ── MESSAGES IMPRESSION ──────────────────────────────────
