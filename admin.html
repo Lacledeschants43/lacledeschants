@@ -3271,13 +3271,14 @@ function exporterContactsCSV() {
 
   const rows = clients.map(c => {
     // Sépare prénom / nom si possible (premier mot = prénom, reste = nom)
+    const nomComplet = 'RESTO ' + c.nom;
     const parts = c.nom.split(' ');
-    const prenom = parts[0] || '';
+    const prenom = 'RESTO ' + (parts[0] || '');
     const nom    = parts.slice(1).join(' ') || '';
     const tel    = c.tel || '';
     // Échapper les guillemets dans les champs
     const esc = s => '"' + s.replace(/"/g, '""') + '"';
-    return [esc(c.nom), esc(prenom), esc(nom), esc(tel), '"Mobile"'].join(',');
+    return [esc(nomComplet), esc(prenom), esc(nom), esc(tel), '"Mobile"'].join(',');
   });
 
   const csv = [headers.join(','), ...rows].join('\n');
