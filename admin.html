@@ -1896,12 +1896,17 @@ function renderAgenda(newId=null) {
 }
 
 function updateStats() {
-  const todayStr = toDateStr(new Date());
-  const futureR = allResas.filter(r=>r.date>=todayStr);
+  const today = new Date();
+  const todayStr = toDateStr(today);
+  const next = new Date(today);
+  next.setDate(today.getDate() + (today.getDay() === 5 ? 2 : 1)); // vendredi → dimanche
+  const nextStr = toDateStr(next);
+  const nextLbl = today.getDay() === 5 ? 'Dimanche' : 'Demain';
+  const couvertsToday = allResas.filter(r=>r.date===todayStr).reduce((s,r)=>s+r.couverts,0);
+  const couvertsNext  = allResas.filter(r=>r.date===nextStr).reduce((s,r)=>s+r.couverts,0);
   $('stat-bar').innerHTML = `
-    <div class="stat-chip"><div class="val">${allResas.length}</div><div class="lbl">Total résa</div></div>
-    <div class="stat-chip"><div class="val">${allResas.filter(r=>r.date===todayStr).length}</div><div class="lbl">Aujourd'hui</div></div>
-    <div class="stat-chip"><div class="val">${futureR.reduce((s,r)=>s+r.couverts,0)}</div><div class="lbl">Couverts à venir</div></div>`;
+    <div class="stat-chip"><div class="val">${couvertsToday}</div><div class="lbl">Couverts aujourd'hui</div></div>
+    <div class="stat-chip"><div class="val">${couvertsNext}</div><div class="lbl">Couverts ${nextLbl}</div></div>`;
 }
 
 function buildResaCard(r, newId=null) {
