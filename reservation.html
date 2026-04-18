@@ -90,20 +90,37 @@
   @keyframes spin { to{transform:rotate(360deg);} }
 
   /* ── SUCCÈS ── */
-  .success-card {
-    display:none; text-align:center; padding:40px 24px;
+  .success-card { display:none; }
+
+  /* ── MODAL CONFIRMATION ── */
+  .modal-overlay {
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45);
+    z-index:1000; align-items:center; justify-content:center; padding:16px;
   }
-  .success-icon { font-size:3rem; margin-bottom:16px; }
-  .success-title { font-family:'Playfair Display',serif; font-size:1.6rem; color:var(--bordeaux); margin-bottom:8px; }
-  .success-msg { font-size:0.92rem; color:var(--gris); line-height:1.7; margin-bottom:20px; }
+  .modal-overlay.open { display:flex; }
+  .modal-box {
+    background:var(--blanc); border-radius:16px; padding:36px 28px;
+    max-width:420px; width:100%; text-align:center;
+    box-shadow:0 8px 40px rgba(0,0,0,0.18); animation:modalIn .25s ease;
+  }
+  @keyframes modalIn { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+  .modal-icon { font-size:3rem; margin-bottom:12px; }
+  .modal-title { font-family:'Playfair Display',serif; font-size:1.6rem; color:var(--bordeaux); margin-bottom:8px; }
+  .modal-msg { font-size:0.92rem; color:var(--gris); line-height:1.7; margin-bottom:20px; }
   .success-recap {
     background:var(--creme); border-radius:8px; padding:16px 20px;
-    text-align:left; margin-bottom:24px; border:1px solid var(--gris-clair);
+    text-align:left; margin-bottom:20px; border:1px solid var(--gris-clair);
   }
   .success-recap-row { display:flex; justify-content:space-between; padding:5px 0; font-size:0.85rem; border-bottom:1px solid var(--gris-clair); }
   .success-recap-row:last-child { border-bottom:none; }
   .success-recap-label { color:var(--gris); }
   .success-recap-val { font-weight:700; color:var(--noir); }
+  .modal-modif {
+    font-size:0.8rem; color:var(--gris); background:var(--creme);
+    border-radius:8px; padding:10px 14px; margin-bottom:20px;
+    border:1px solid var(--gris-clair); line-height:1.6;
+  }
+  .modal-modif a { color:var(--bordeaux); font-weight:700; text-decoration:none; }
   .btn-nouvelle { background:none; border:1.5px solid var(--bordeaux); color:var(--bordeaux); border-radius:8px; padding:11px 24px; font-family:'Lato',sans-serif; font-size:0.85rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; cursor:pointer; transition:all 0.2s; }
   .btn-nouvelle:hover { background:var(--bordeaux); color:var(--blanc); }
 
@@ -370,6 +387,18 @@
   </div>
 </main>
 
+<!-- Modal confirmation -->
+<div class="modal-overlay" id="modal-confirmation">
+  <div class="modal-box">
+    <div class="modal-icon">🎉</div>
+    <div class="modal-title">Réservation confirmée !</div>
+    <div class="modal-msg">Nous avons bien reçu votre réservation.<br>Nous vous attendons avec plaisir !</div>
+    <div class="success-recap" id="success-recap"></div>
+    <div class="modal-modif">Pour toute modification, veuillez nous appeler au<br><a href="tel:0471575069">04 71 57 50 69</a></div>
+    <button class="btn-nouvelle" onclick="nouvelleSaisie()">Faire une autre réservation</button>
+  </div>
+</div>
+
 <!-- Infos pratiques -->
 <section class="infos">
   <div class="info-chip">
@@ -629,8 +658,10 @@ async function soumettre() {
       <div class="success-recap-row"><span class="success-recap-label">Placement</span><span class="success-recap-val">${resa.placement==='terrasse'?'☀️ Terrasse':'🏠 Intérieur'}</span></div>
       ${resa.comment?`<div class="success-recap-row"><span class="success-recap-label">Message</span><span class="success-recap-val">${resa.comment}</span></div>`:''}
     `;
-    $('form-wrap').style.display='none';
-    $('success-wrap').style.display='block';
+    $('btn-resa').disabled=false;
+    $('btn-txt').textContent='Confirmer ma réservation';
+    $('spinner').style.display='none';
+    $('modal-confirmation').classList.add('open');
 
   } catch(e) {
     showToast('Une erreur est survenue, veuillez réessayer.','ko');
@@ -644,11 +675,7 @@ function nouvelleSaisie() {
   $('nom').value=''; $('couverts').value=''; $('heure').value='';
   $('tel').value=''; $('comment').value=''; $('placement').value='interieur';
   initCal();
-  $('form-wrap').style.display='block';
-  $('success-wrap').style.display='none';
-  $('btn-resa').disabled=false;
-  $('btn-txt').textContent='Confirmer ma réservation';
-  $('spinner').style.display='none';
+  $('modal-confirmation').classList.remove('open');
 }
 
 // ── BANNIÈRE + POPUP FERMETURE ────────────────────────────
