@@ -220,6 +220,21 @@
   .clients-empty { text-align: center; padding: 48px 24px; color: var(--gris); }
   .client-tel { font-size: 0.78rem; color: var(--bordeaux); margin-top: 3px; font-weight: 700; }
 
+  /* Boutons actions fiche client */
+  .client-card-actions { display: flex; gap: 6px; margin-left: 4px; flex-shrink: 0; }
+  .btn-client-edit { background: none; border: 1.5px solid var(--gris-clair); border-radius: 6px; padding: 4px 9px; font-size: 0.78rem; cursor: pointer; color: var(--gris); font-family: 'Lato', sans-serif; font-weight: 700; transition: all 0.2s; }
+  .btn-client-edit:hover { border-color: var(--bordeaux); color: var(--bordeaux); }
+  .client-resa-actions { display: flex; gap: 5px; flex-shrink: 0; }
+  .btn-resa-mini { background: none; border: 1.5px solid var(--gris-clair); border-radius: 5px; padding: 3px 7px; font-size: 0.75rem; cursor: pointer; color: var(--gris); font-family: 'Lato', sans-serif; transition: all 0.2s; }
+  .btn-resa-mini:hover { border-color: var(--bordeaux); color: var(--bordeaux); }
+  .btn-resa-mini.del:hover { border-color: var(--error); color: var(--error); }
+
+  /* Modal édition client (nom/tel) */
+  #modal-client-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:800; align-items:center; justify-content:center; padding:16px; }
+  #modal-client-overlay.open { display:flex; }
+  .modal-client-box { background:var(--blanc); border-radius:12px; padding:28px 24px; width:100%; max-width:400px; box-shadow:0 16px 48px rgba(0,0,0,0.2); }
+  .modal-client-title { font-family:'Playfair Display',serif; font-size:1.2rem; color:var(--bordeaux); margin-bottom:20px; }
+
   /* ── PLAN DE SALLE ── */
   .salle-wrapper { max-width:1100px; margin:0 auto; padding:24px 16px 64px; }
   .salle-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:16px; }
@@ -1301,6 +1316,26 @@
 <div id="print-area"></div>
 <div id="print-area-plan"></div>
 
+<!-- Modal édition nom/tél client -->
+<div id="modal-client-overlay" onclick="closeModalClient(event)">
+  <div class="modal-client-box">
+    <div class="modal-client-title">✏️ Modifier le client</div>
+    <input type="hidden" id="client-edit-ancien-nom">
+    <div class="form-group" style="margin-bottom:14px;">
+      <label>Nom</label>
+      <input type="text" id="client-edit-nom" placeholder="Nom du client">
+    </div>
+    <div class="form-group" style="margin-bottom:20px;">
+      <label>Téléphone</label>
+      <input type="tel" id="client-edit-tel" placeholder="06 xx xx xx xx">
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn-save" onclick="saveClientEdit()">✓ Enregistrer</button>
+      <button class="btn-cancel" onclick="closeModalClient()">Annuler</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -2215,6 +2250,10 @@ function renderClients() {
           ${r.comment ? `<br><em>💬 ${escHTML(r.comment)}</em>` : ''}
         </div>
         <div class="client-resa-badge ${badge}">${badgeLabel}</div>
+        <div class="client-resa-actions">
+          <button class="btn-resa-mini" onclick="event.stopPropagation();openEdit(${r.id})" title="Modifier">✏️</button>
+          <button class="btn-resa-mini del" onclick="event.stopPropagation();deleteResa(${r.id},'${escHTML(r.nom)}')" title="Supprimer">✕</button>
+        </div>
       </div>`;
     }).join('');
 
@@ -2226,6 +2265,9 @@ function renderClients() {
           <div class="client-meta">${metaStr}</div>
           ${c.tel ? `<div class="client-tel">📞 ${escHTML(c.tel)}</div>` : ''}
         </div>
+        <div class="client-card-actions">
+          <button class="btn-client-edit" onclick="event.stopPropagation();openClientEdit('${escHTML(c.nom)}','${escHTML(c.tel||'')}')" title="Modifier nom/tél">✏️ Modifier</button>
+        </div>
         <div class="client-chevron">▾</div>
       </div>
       <div class="client-history">${rows}</div>
@@ -2236,6 +2278,53 @@ function renderClients() {
 function toggleClient(id) {
   const card = $(id);
   card.classList.toggle('open');
+}
+
+// ── ÉDITION CLIENT (nom / tél) ────────────────────────────
+function openClientEdit(nom, tel) {
+  $('client-edit-ancien-nom').value = nom;
+  $('client-edit-nom').value = nom;
+  $('client-edit-tel').value = tel;
+  $('modal-client-overlay').classList.add('open');
+}
+
+function closeModalClient(e) {
+  if (!e || e.target === $('modal-client-overlay')) {
+    $('modal-client-overlay').classList.remove('open');
+  }
+}
+
+async function saveClientEdit() {
+  const ancienNom = $('client-edit-ancien-nom').value;
+  const nouveauNom = $('client-edit-nom').value.trim();
+  const nouveauTel = $('client-edit-tel').value.trim();
+
+  if (!nouveauNom) { showToast('Le nom est obligatoire.', 'error'); return; }
+
+  // Trouver toutes les réservations de ce client
+  const resasClient = allResas.filter(r => normaliserNom(r.nom) === normaliserNom(ancienNom));
+  if (!resasClient.length) { showToast('Aucune réservation trouvée.', 'error'); return; }
+
+  try {
+    // Mettre à jour chaque réservation en parallèle
+    await Promise.all(resasClient.map(r =>
+      fetch(API_URL + '?id=eq.' + r.id, {
+        method: 'PATCH',
+        headers: HEADERS,
+        body: JSON.stringify({ nom: nouveauNom, tel: nouveauTel || null })
+      })
+    ));
+    // Mettre à jour localement
+    resasClient.forEach(r => {
+      const i = allResas.findIndex(x => x.id === r.id);
+      if (i !== -1) { allResas[i].nom = nouveauNom; allResas[i].tel = nouveauTel || null; }
+    });
+    closeModalClient();
+    renderClients();
+    showToast(`✓ Client mis à jour (${resasClient.length} réservation${resasClient.length>1?'s':''}).`, 'success');
+  } catch(e) {
+    showToast('Erreur lors de la mise à jour.', 'error');
+  }
 }
 
 // ── IMPRESSION TICKET ─────────────────────────────────────
